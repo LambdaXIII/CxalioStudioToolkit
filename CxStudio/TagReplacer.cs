@@ -1,4 +1,6 @@
-﻿namespace CxStudio
+﻿using System.Text.RegularExpressions;
+
+namespace CxStudio
 {
 
     public interface ITagStringProvider
