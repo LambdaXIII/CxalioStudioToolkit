@@ -1,39 +1,40 @@
 ﻿namespace CxStudio
 {
 
-    public interface TimeRangeSupport
+    public interface ITimeRange
     {
-        public readonly Time Start { get }
-        public readonly Time Duration { get }
-        public readonly Time End { get { return Start + Duration; } }
+        public Time Start { get; }
+        public Time Duration { get; }
+        public Time End { get { return Start + Duration; } }
 
         public bool Contains(Time time)
         {
             return Start <= time && time < End;
         }
 
-        public bool Intersects(TimeRangeSupport other)
+        public bool Intersects(ITimeRange other)
         {
             return Start <= other.End && other.Start <= End;
         }
 
     }
 
-    public interface TimeRangeEditingSupport : TimeRangeSupport
+    public interface ITimeRangeEditingSupport : ITimeRange
     {
-        public Time Start
+        public new Time Start
         {
             get; set;
         }
 
-        public Time Duration
+        public new Time Duration
         {
             get; set;
         }
 
         public Time End
         {
-            get { return Start + Duration; }; set { Duration = value - Start; };
+            get { return Start + Duration; }
+            set { Duration = value - Start; }
         }
 
         public void Shift(Time delta)
