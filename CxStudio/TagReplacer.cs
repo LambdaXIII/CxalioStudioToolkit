@@ -42,7 +42,7 @@ namespace CxStudio
     }
 
 
-        public class TagReplacer
+    public class TagReplacer
     {
         private readonly Dictionary<string, ITagStringProvider> _tagProviders;
 
@@ -59,7 +59,7 @@ namespace CxStudio
 
         public TagReplacer InstallProvider(string tag, string replacement)
         {
-            _tagProviders.Add(tag,new SimpleReplacementProvider(replacement));
+            _tagProviders.Add(tag, new SimpleReplacementProvider(replacement));
             return this;
         }
 
