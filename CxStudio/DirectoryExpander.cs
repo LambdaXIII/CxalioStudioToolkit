@@ -13,11 +13,13 @@
 
     public class ChainPathChecker : IPathChecker
     {
-        private List<IPathChecker> _checkers;
+        private readonly List<IPathChecker> _checkers;
+
         public ChainPathChecker()
         {
-            _checkers = new List<IPathChecker>();
+            _checkers = [];
         }
+
         public ChainPathChecker Add(IPathChecker checker)
         {
             _checkers.Add(checker);
