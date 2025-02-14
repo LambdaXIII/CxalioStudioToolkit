@@ -31,7 +31,7 @@
             get; set;
         }
 
-        public Time End
+        public new Time End
         {
             get { return Start + Duration; }
             set { Duration = value - Start; }

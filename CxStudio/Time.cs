@@ -20,7 +20,12 @@ namespace CxStudio
 
         public double ToSeconds()
         {
-            return _ms / 1000.0;
+            return Math.Round(_ms / 1000.0, 2);
+        }
+
+        public long ToMilliseconds()
+        {
+            return _ms;
         }
 
         public static Time? FromTimecode(string timecode, Timebase timebase)
