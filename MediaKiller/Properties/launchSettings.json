@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MediaKiller": {
+      "commandName": "Project",
+      "commandLineArgs": "aaa bbb ccc ddd"
+    }
+  }
+}
