@@ -12,7 +12,7 @@ public sealed class Project
     public string Description { get; private set; } = string.Empty;
     public string FfmpegPath { get; private set; } = string.Empty;
 
-    public HashSet<string> AcceptableSuffixes { get; private set; } = new();
+    public HashSet<string> AcceptableSuffixes { get; private set; } = [];
 
     public string TargetFolder { get; private set; } = string.Empty;
 
@@ -22,8 +22,8 @@ public sealed class Project
 
     public struct DetailGroup { public string NamePattern; public string options; }
 
-    public List<DetailGroup> InputGroups { get; private set; } = new();
-    public List<DetailGroup> OutputGroups { get; private set; } = new();
+    public List<DetailGroup> InputGroups { get; private set; } = [];
+    public List<DetailGroup> OutputGroups { get; private set; } = [];
 
     public static string DefaultSuffixes1 => DefaultSuffixes;
 
@@ -36,6 +36,53 @@ public sealed class Project
         return suffix.ToLower();
     }
 
+    private void ParseSourceTable(ref TomlTable sourceTable)
+    {
+        var table = sourceTable.ToDictionary();
+        bool ignore_default_suffixes = table.ContainsKey("ignore_default_suffixes") && sourceTable.Get<bool>("ignore_default_suffixes");
+        if (!ignore_default_suffixes)
+        {
+            foreach (var suffix in DefaultSuffixes.Split(' '))
+            {
+                this.AcceptableSuffixes.Add(CheckSuffix(suffix));
+            }
+        }
+        if (table.TryGetValue("suffix_includes", out object? includes))
+        {
+            if (includes is string includesString)
+            {
+                foreach (var suffix in includesString.Split(' '))
+                {
+                    this.AcceptableSuffixes.Add(CheckSuffix(suffix));
+                }
+            }
+            else if (includes is TomlArray includesArray)
+            {
+                foreach (var suffix in includesArray.To<string>())
+                {
+                    this.AcceptableSuffixes.Add(CheckSuffix(suffix));
+                }
+            }
+        }
+        if (table.TryGetValue("suffix_excludes", out object? excludes))
+        {
+            if (excludes is string excludesString)
+            {
+                foreach (var suffix in excludesString.Split(' '))
+                {
+                    this.AcceptableSuffixes.Remove(CheckSuffix(suffix));
+                }
+            }
+            else if (excludes is TomlArray excludesArray)
+            {
+                foreach (var suffix in excludesArray.To<string>())
+                {
+                    this.AcceptableSuffixes.Remove(CheckSuffix(suffix));
+                }
+            }
+        }
+    }
+
     public static Project ParseToml(string profile_path)
     {
         Project profile = new();
@@ -46,25 +93,8 @@ public sealed class Project
         profile.Description = pro_table.Get<TomlTable>("general").Get<string>("description");
         profile.FfmpegPath = pro_table.Get<TomlTable>("general").Get<string>("ffmpeg_path");
 
-        if (!pro_table.Get<TomlTable>("source").Get<bool>("ignore_default_suffixes"))
-        {
-
-            foreach (var suffix in DefaultSuffixes.Split(' '))
-            {
-                profile.AcceptableSuffixes.Add(CheckSuffix(suffix));
-            }
-
-        }
-
-        foreach (var suffix in pro_table.Get<TomlTable>("source").Get<TomlArray>("suffix_includes").To<string>())
-        {
-            profile.AcceptableSuffixes.Add(CheckSuffix(suffix));
-        }
-
-        foreach (var suffix in pro_table.Get<TomlTable>("source").Get<TomlArray>("suffix_excludes").To<string>())
-        {
-            profile.AcceptableSuffixes.Remove(CheckSuffix(suffix));
-        }
+        TomlTable source_table = pro_table.Get<TomlTable>("source");
+        profile.ParseSourceTable(ref source_table);
 
         profile.TargetFolder = pro_table.Get<TomlTable>("target").Get<string>("folder");
         profile.TargetSuffix = pro_table.Get<TomlTable>("target").Get<string>("suffix");
