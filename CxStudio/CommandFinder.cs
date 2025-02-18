@@ -1,6 +1,6 @@
 ﻿namespace CxStudio;
 
-class CommandFinder
+public class CommandFinder
 {
     public bool SubDirectorySearchEnabled { get; set; } = false;
 

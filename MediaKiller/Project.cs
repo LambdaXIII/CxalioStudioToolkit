@@ -1,4 +1,5 @@
-﻿using Nett;
+﻿using CxStudio;
+using Nett;
 
 namespace MediaKiller;
 
@@ -83,15 +84,26 @@ public sealed class Project
         }
     }
 
+    private void ParseGeneralTable(ref TomlTable generalTable)
+    {
+        this.Id = generalTable.Get<string>("profile_id");
+        this.Name = generalTable.Get<string>("name");
+        this.Description = generalTable.Get<string>("description");
+
+        var ffmpeg_path = generalTable.Get<string>("ffmpeg_path") ?? "ffmpeg";
+        CommandFinder finder = new();
+        finder.AddSearchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))
+            .AddSearchPath(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+        this.FfmpegPath = finder.Find(ffmpeg_path) ?? ffmpeg_path;
+    }
+
     public static Project ParseToml(string profile_path)
     {
         Project profile = new();
         var pro_table = Toml.ReadFile(profile_path);
 
-        profile.Id = pro_table.Get<TomlTable>("general").Get<string>("profile_id");
-        profile.Name = pro_table.Get<TomlTable>("general").Get<string>("name");
-        profile.Description = pro_table.Get<TomlTable>("general").Get<string>("description");
-        profile.FfmpegPath = pro_table.Get<TomlTable>("general").Get<string>("ffmpeg_path");
+        TomlTable general_table = pro_table.Get<TomlTable>("general");
+        profile.ParseGeneralTable(ref general_table);
 
         TomlTable source_table = pro_table.Get<TomlTable>("source");
         profile.ParseSourceTable(ref source_table);
