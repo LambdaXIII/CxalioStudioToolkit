@@ -1,6 +1,6 @@
 ﻿namespace MediaKiller;
 
-sealed class Mission
+struct Mission
 {
     public string FFmpegPath = string.Empty;
 
@@ -9,7 +9,9 @@ sealed class Mission
     public List<ArgumentGroup> Inputs = [];
     public List<ArgumentGroup> Outputs = [];
 
-    public List<string> CommandElements()
+    public Mission() { }
+
+    public readonly List<string> CommandElements()
     {
         List<string> cmd =
         [
@@ -21,7 +23,7 @@ sealed class Mission
         return cmd;
     }
 
-    public string CompileFullCommand()
+    public readonly string FullCommand()
     {
         return string.Join(' ', CommandElements());
     }
