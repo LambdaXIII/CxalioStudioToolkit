@@ -5,6 +5,9 @@ namespace MediaKiller;
 
 internal sealed class Preset
 {
+    public string PresetPath = string.Empty;
+    public string? AlternateOutputPath = null;
+
     public string Id = string.Empty;
     public string Name = string.Empty;
     public string Description = string.Empty;
@@ -134,7 +137,10 @@ internal sealed class Preset
 
     public static Preset Load(string path)
     {
-        Preset result = new();
+        Preset result = new()
+        {
+            PresetPath = path
+        };
 
         var profile = Toml.ReadFile(path);
         result.LoadGeneralTable(profile.Get<TomlTable>("general"));

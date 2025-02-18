@@ -43,7 +43,7 @@ public class TagReplacer
 
     public TagReplacer()
     {
-        _tagProviders = new Dictionary<string, ITagStringProvider>();
+        _tagProviders = [];
     }
 
     public TagReplacer InstallProvider(string tag, ITagStringProvider provider)

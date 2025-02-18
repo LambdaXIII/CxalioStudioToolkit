@@ -39,6 +39,11 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         {
             if (Path.GetExtension(input) == ".toml")
             {
+                Preset p = Preset.Load(input);
+
+                if (settings.Output != null)
+                    p.AlternateOutputPath = settings.Output;
+
                 Arguments.Projects.Add(Preset.Load(input));
             }
             else
