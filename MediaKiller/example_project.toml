@@ -2,7 +2,7 @@
 
 [general]
 # 此节用于设置配置文件的基本信息
-profile_id = 'example-profile'
+preset_id = 'example-profile'
 name = "示例"
 description = "不进行转码，只是拷贝音视频流"
 ffmpeg = "ffmpeg"

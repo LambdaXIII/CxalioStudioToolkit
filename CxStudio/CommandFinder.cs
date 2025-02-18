@@ -67,8 +67,8 @@ public class CommandFinder
         return null;
     }
 
-    public static string QuickFind(string cmd)
+    public static string? QuickFind(string cmd)
     {
-        return new CommandFinder().Find(cmd) ?? cmd;
+        return new CommandFinder().Find(cmd);
     }
 }

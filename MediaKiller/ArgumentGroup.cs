@@ -1,9 +1,13 @@
 ﻿namespace MediaKiller;
 
-class ArgumentGroup
+public sealed class ArgumentGroup
 {
-    public readonly Dictionary<string, string?> Options = new();
+    public readonly Dictionary<string, string?> Options = [];
     public string? FileName = null;
+
+    public ArgumentGroup()
+    {
+    }
 
     public static string CheckKey(string key)
     {

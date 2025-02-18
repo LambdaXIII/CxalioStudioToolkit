@@ -39,7 +39,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         {
             if (Path.GetExtension(input) == ".toml")
             {
-                Arguments.Projects.Add(Project.ParseToml(input));
+                Arguments.Projects.Add(Preset.Load(input));
             }
             else
             {
