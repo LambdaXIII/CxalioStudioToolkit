@@ -2,7 +2,7 @@
 
 internal sealed class GlobalArguments
 {
-    public List<Preset> Projects { get; set; } = [];
+    public List<Preset> Presets { get; set; } = [];
 
     public List<string> Sources { get; set; } = [];
 

@@ -23,6 +23,10 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         [CommandOption("-o|--output <OUTPUT>")]
         public string? Output { get; set; }
 
+        [Description("Save missions as a script.")]
+        [CommandOption("-s|--save-script <SCRIPT>")]
+        public string? ScriptOutput { get; set; }
+
         [Description("Enable debug mode.")]
         [CommandOption("-d|--debug")]
         [DefaultValue(false)]
@@ -44,7 +48,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                 if (settings.Output != null)
                     p.OverrideTargetFolder = settings.Output;
 
-                Arguments.Projects.Add(Preset.Load(input));
+                Arguments.Presets.Add(Preset.Load(input));
             }
             else
             {
