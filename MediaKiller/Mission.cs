@@ -1,4 +1,5 @@
-﻿namespace MediaKiller;
+﻿using CxStudio
+namespace MediaKiller;
 
 struct Mission
 {
@@ -18,8 +19,20 @@ struct Mission
             FFmpegPath,
             .. GlobalOptions.Arguments(),
         ];
-        Inputs.ForEach((input) => { cmd.AddRange(input.Arguments()); cmd.Add("-i"); cmd.Add(input.FileName ?? ""); });
-        Outputs.ForEach(Outputs => { cmd.AddRange(Outputs.Arguments()); cmd.Add(Outputs.FileName ?? ""); });
+
+        Inputs.ForEach((input) =>
+        {
+            cmd.AddRange(input.Arguments());
+            cmd.Add("-i");
+            cmd.Add(TextUtils.QuoteSpacedString(input.FileName));
+        });
+
+        Outputs.ForEach(Outputs =>
+        {
+            cmd.AddRange(Outputs.Arguments());
+            cmd.Add(TextUtils.QuoteSpacedString(Outputs.FileName));
+        });
+
         return cmd;
     }
 

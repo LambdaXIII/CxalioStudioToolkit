@@ -2,7 +2,7 @@
 
 [general]
 # 此节用于设置配置文件的基本信息
-preset_id = 'example-profile'
+preset_id = 'example-preset'
 name = "示例"
 description = "不进行转码，只是拷贝音视频流"
 ffmpeg = "ffmpeg"
@@ -36,17 +36,17 @@ ignore_default_suffixes = false
 # folder 为输出内容应用的子目录，默认使用配置文件的标题新建文件夹
 # keep_parent_level 设置保留源文件父目录的层级，默认不保留
 suffix = "mov"
-folder = "${profile:name}"
+folder = "${preset:name}"
 keep_parent_level = 0
 
 # input 是输入列表，默认情况下只有一个输入，即为源文件
 # 可以添加更多的 [[input]] 增加每个任务的输入，并使用变量引用其它的文件
 [[input]]
-filename = "${source:absolute}"
+filename = "${source:fullpath}"
 options = ""
 
 # output 是输出列表，默认情况下保留源文件名并替换扩展名输出
 # 可以添加更多的 [[output]] 使得每个任务可以输出多个文件
 [[output]]
-filename = "${target:absolute}"
+filename = "${target:fullpath}"
 options = "-c:v copy -c:a copy"

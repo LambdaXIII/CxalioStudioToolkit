@@ -5,16 +5,16 @@ namespace CxStudio;
 
 public interface ITagStringProvider
 {
-    string Replace(string? param);
+    string? Replace(string? parameters);
 }
 
 public sealed class FileInfoProvider(string path) : ITagStringProvider
 {
     private readonly string _source = path;
 
-    public string Replace(string? param)
+    public string? Replace(string? parameters)
     {
-        string? result = param switch
+        string? result = parameters switch
         {
             "basename" => Path.GetFileNameWithoutExtension(_source),
             "extension" => Path.GetExtension(_source),
@@ -22,15 +22,15 @@ public sealed class FileInfoProvider(string path) : ITagStringProvider
             "filename" => Path.GetFileName(_source),
             "fullpath" => Path.GetFullPath(_source),
             "root" => Path.GetPathRoot(_source),
-            _ => _source
+            _ => null
         };
-        return result ?? _source;
+        return result;
     }
 }
 
 internal sealed class SimpleReplacementProvider(string replacement) : ITagStringProvider
 {
-    public string Replace(string? param)
+    public string? Replace(string? param)
     {
         return replacement;
     }
@@ -63,7 +63,7 @@ public class TagReplacer
         foreach (var tagProvider in _tagProviders)
         {
             string pattern = $@"\$\{{{tagProvider.Key}(:(.*?))?\}}";
-            input = Regex.Replace(input, pattern, match => tagProvider.Value.Replace(match.Groups[2].Success ? match.Groups[2].Value : null));
+            input = Regex.Replace(input, pattern, match => tagProvider.Value.Replace(match.Groups[2].Success ? match.Groups[2].Value : null) ?? input);
         }
         return input;
     }
