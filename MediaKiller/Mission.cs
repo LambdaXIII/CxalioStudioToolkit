@@ -1,4 +1,4 @@
-﻿using CxStudio
+﻿using CxStudio;
 namespace MediaKiller;
 
 struct Mission
