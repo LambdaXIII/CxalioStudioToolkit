@@ -10,5 +10,10 @@ internal sealed class GlobalArguments
 
     public bool Debug { get; set; } = false;
 
+
+    private static readonly Lazy<GlobalArguments> _instance = new(() => new GlobalArguments());
+    private GlobalArguments() { }
+    public static GlobalArguments Instance => _instance.Value;
+
 }
 

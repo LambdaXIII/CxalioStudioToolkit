@@ -2,11 +2,6 @@
 
 namespace MediaKiller;
 
-
-
-
-
-
 internal sealed class MissionMaker(Preset preset)
 {
     class PresetInfoProvider : ITagStringProvider
@@ -87,11 +82,11 @@ internal sealed class MissionMaker(Preset preset)
         ;
 
         string target = tagReplacer.ReplaceTags(_preset.TargetFolder);
-        if (_preset.OverrideTargetFolder is not null)
+        if (GlobalArguments.Instance.OutputFolder is not null)
         {
             if (Path.IsPathFullyQualified(target))
-                target = _preset.OverrideTargetFolder;
-            else target = Path.Combine(_preset.OverrideTargetFolder, target);
+                target = GlobalArguments.Instance.OutputFolder;
+            else target = Path.Combine(GlobalArguments.Instance.OutputFolder, target);
         }
         target = Path.Combine(target, string.Join(Path.DirectorySeparatorChar, parentParts), targetFileName);
 

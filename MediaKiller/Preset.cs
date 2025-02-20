@@ -6,7 +6,6 @@ namespace MediaKiller;
 internal sealed class Preset
 {
     public string PresetPath = string.Empty;
-    public string? OverrideTargetFolder = null;
 
     public string Id = string.Empty;
     public string Name = string.Empty;

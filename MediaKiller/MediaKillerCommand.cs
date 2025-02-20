@@ -33,28 +33,26 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         public bool Debug { get; init; }
     }
 
-    public readonly GlobalArguments Arguments = new();
-
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
-        Arguments.OutputFolder = settings.Output ?? ".";
-        Arguments.Debug = settings.Debug;
+        GlobalArguments.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
+        GlobalArguments.Instance.Debug = settings.Debug;
+
         foreach (var input in settings.Inputs ?? [])
         {
             if (Path.GetExtension(input) == ".toml")
             {
                 Preset p = Preset.Load(input);
 
-                if (settings.Output != null)
-                    p.OverrideTargetFolder = settings.Output;
-
-                Arguments.Presets.Add(Preset.Load(input));
+                GlobalArguments.Instance.Presets.Add(Preset.Load(input));
             }
             else
             {
-                Arguments.Sources.Add(input);
+                GlobalArguments.Instance.Sources.Add(input);
             }
         }
+
+
 
         return 0;
     }
