@@ -81,7 +81,7 @@ internal sealed class MissionMaker(Preset preset)
         string targetExt = _preset.TargetSuffix;
         if (!targetExt.StartsWith('.'))
         {
-            targetExt.Prepend('.');
+            targetExt = '.' + targetExt;
         }
         string targetFileName = $"{Path.GetFileNameWithoutExtension(source)}{targetExt}";
         ;
