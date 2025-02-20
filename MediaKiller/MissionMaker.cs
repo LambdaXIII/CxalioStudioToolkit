@@ -100,8 +100,8 @@ internal sealed class MissionMaker(Preset preset)
             GlobalOptions = _preset.GlobalOptions
         };
 
-        if (_preset.HardwareAcceleration.Length > 0)
-            mission.GlobalOptions.AddArgument("-hwaccel", _preset.HardwareAcceleration);
+        if (_preset.HardwareAccelerate.Length > 0)
+            mission.GlobalOptions.AddArgument("-hwaccel", _preset.HardwareAccelerate);
 
         mission.GlobalOptions.AddArgument(_preset.Overwrite ? "-y" : "-n");
 

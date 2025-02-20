@@ -13,7 +13,7 @@ internal sealed class Preset
     public string FFmpegPath = "ffmpeg";
 
     public bool Overwrite = false;
-    public string HardwareAcceleration = "auto";
+    public string HardwareAccelerate = "auto";
     public ArgumentGroup GlobalOptions = new();
 
     public readonly Dictionary<string, string> CustomValues = new();
@@ -42,7 +42,7 @@ internal sealed class Preset
         FFmpegPath = CommandFinder.QuickFind(ffmpeg) ?? "ffmpeg";
 
         Overwrite = table.Get<bool>("overwrite");
-        HardwareAcceleration = table.Get<string>("hardware_acceleration");
+        HardwareAccelerate = table.Get<string>("hardware_accelerate");
 
         string options = table.Get<string>("options");
         GlobalOptions.AddArguments(options);
@@ -108,7 +108,7 @@ internal sealed class Preset
     {
         TargetSuffix = table.Get<string>("suffix");
         TargetFolder = table.Get<string>("folder");
-        TargetKeepParentLevels = table.Get<int>("keep_parent_levels");
+        TargetKeepParentLevels = table.Get<int>("keep_parent_level");
     }
 
     private void LoadInputTables(TomlTableArray tables)
@@ -117,7 +117,7 @@ internal sealed class Preset
         {
             var input = new ArgumentGroup();
             input.FileName = table.Get<string>("filename");
-            input.AddArguments(table.Get<string>("arguments"));
+            input.AddArguments(table.Get<string>("options"));
             Inputs.Add(input);
         }
     }
