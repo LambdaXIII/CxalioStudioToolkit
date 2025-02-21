@@ -7,7 +7,6 @@ namespace MediaKiller;
 
 internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 {
-
     public class Settings : CommandSettings
     {
         [Description("The input files to process.")]
@@ -50,16 +49,14 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                     continue;
                 }
             }
+
+            if (lowerExt == ".toml")
+            {
+                GlobalArguments.Instance.Presets.Add(Preset.Load(input));
+            }
             else
             {
-                if (lowerExt == ".toml")
-                {
-                    GlobalArguments.Instance.Presets.Add(Preset.Load(input));
-                }
-                else
-                {
-                    GlobalArguments.Instance.Sources.Add(input);
-                }
+                GlobalArguments.Instance.Sources.Add(input);
             }
         }
 
