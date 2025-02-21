@@ -40,16 +40,32 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
         foreach (var input in settings.Inputs ?? [])
         {
-            if (Path.GetExtension(input) == ".toml")
+            string lowerExt = Path.GetExtension(input).ToLower();
+            if (string.IsNullOrEmpty(lowerExt))
             {
-                Preset p = Preset.Load(input);
-
-                GlobalArguments.Instance.Presets.Add(Preset.Load(input));
+                string i = Path.GetFullPath(input) + ".toml";
+                if (File.Exists(i))
+                {
+                    GlobalArguments.Instance.Presets.Add(Preset.Load(i));
+                    continue;
+                }
             }
             else
             {
-                GlobalArguments.Instance.Sources.Add(input);
+                if (lowerExt == ".toml")
+                {
+                    GlobalArguments.Instance.Presets.Add(Preset.Load(input));
+                }
+                else
+                {
+                    GlobalArguments.Instance.Sources.Add(input);
+                }
             }
+        }
+
+        foreach (var p in GlobalArguments.Instance.Presets)
+        {
+            Console.WriteLine(p.Name);
         }
 
         SourceExpander sourceExpander = new(GlobalArguments.Instance.Presets[0]);

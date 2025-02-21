@@ -128,7 +128,7 @@ internal sealed class Preset
         {
             var output = new ArgumentGroup();
             output.FileName = table.Get<string>("filename");
-            output.AddArguments(table.Get<string>("arguments"));
+            output.AddArguments(table.Get<string>("options"));
             Outputs.Add(output);
         }
     }

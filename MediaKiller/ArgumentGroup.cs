@@ -27,7 +27,7 @@ public struct ArgumentGroup
     public readonly ArgumentGroup AddArguments(string arguments)
     {
         string? last_key = null;
-        foreach (string arg in arguments.Split(' '))
+        foreach (string arg in arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
             if (arg[0] == '-')
             {
