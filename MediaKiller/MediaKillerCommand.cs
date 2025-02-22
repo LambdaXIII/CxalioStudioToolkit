@@ -61,10 +61,15 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             }
         }
 
-        SourceExpander sourceExpander = new(XEnv.Instance.Presets, XEnv.Instance.Sources);
-        foreach (var source in sourceExpander.Expand())
+        foreach (Preset p in XEnv.Instance.Presets)
         {
-            Console.WriteLine(source);
+            SourceExpander expander = new(p);
+            MissionMaker maker = new(p);
+            foreach (string source in expander.Expand(XEnv.Instance.Sources))
+            {
+                Mission m = maker.Make(source);
+                Console.WriteLine(m.GetFullCommand());
+            }
         }
 
         return 0;

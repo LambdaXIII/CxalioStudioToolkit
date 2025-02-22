@@ -1,39 +1,28 @@
 ﻿using CxStudio;
 namespace MediaKiller;
 
-class SourceExpander(IEnumerable<Preset> presets, IEnumerable<string> sources)
+class SourceExpander(Preset p)
 {
-    private readonly IEnumerable<Preset> Presets = presets;
-    private readonly IEnumerable<string> Sources = sources;
-    static DirectoryExpanderSettings PublicExpanderSettings => new()
+    private readonly Preset Preset = p;
+    private readonly DirectoryExpanderSettings DefaultSettings = new DirectoryExpanderSettings()
     {
-        IncludeSubDirectories = true,
         AcceptDirectories = false,
         AcceptFiles = true,
+        IncludeSubDirectories = true,
+        FileValidator = new ExtensionWhiteListChecker(p.AcceptableSuffixes)
     };
 
-    private static DirectoryExpander MakeExpander(Preset preset, string source)
+    public IEnumerable<string> Expand(IEnumerable<string> sources)
     {
-        var settings = PublicExpanderSettings;
-        settings.FileValidator = new ExtensionWhiteListChecker(preset.AcceptableSuffixes);
-        return new(source, settings);
-    }
-
-    public IEnumerable<string> Expand()
-    {
-        foreach (var preset in Presets)
+        foreach (string source in sources)
         {
-            foreach (var source in Sources)
+            DirectoryExpander expander = new(source, DefaultSettings);
+            foreach (string file in expander.Expand())
             {
-                var expander = MakeExpander(preset, source);
-                foreach (var path in expander.Expand())
-                {
-                    yield return path;
-                }
+                yield return file;
             }
         }
     }
-
 }
 
 

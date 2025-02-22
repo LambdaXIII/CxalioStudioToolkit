@@ -12,7 +12,7 @@ struct Mission
 
     public Mission() { }
 
-    public readonly List<string> CommandElements()
+    public readonly List<string> GetCommandElements()
     {
         List<string> cmd =
         [
@@ -36,8 +36,8 @@ struct Mission
         return cmd;
     }
 
-    public readonly string FullCommand()
+    public readonly string GetFullCommand()
     {
-        return string.Join(' ', CommandElements());
+        return string.Join(' ', GetCommandElements());
     }
 }

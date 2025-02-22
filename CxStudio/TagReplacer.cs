@@ -21,6 +21,7 @@ public sealed class FileInfoProvider(string path) : ITagStringProvider
             "parent_name" => Path.GetDirectoryName(_source),
             "filename" => Path.GetFileName(_source),
             "fullpath" => Path.GetFullPath(_source),
+            "absolute" => Path.GetFullPath(_source),
             "root" => Path.GetPathRoot(_source),
             _ => null
         };
