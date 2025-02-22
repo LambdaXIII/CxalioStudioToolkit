@@ -32,8 +32,12 @@ internal sealed class Preset
 
 
 
-    private void LoadGeneralTable(TomlTable table)
+    private void LoadGeneralTable(ref TomlTable profile)
     {
+        var table = profile.TryGetValue("general", out var value) ? value as TomlTable : null;
+        if (table is null)
+            return;
+
         Id = table.Get<string>("preset_id");
         Name = table.Get<string>("name");
         Description = table.Get<string>("description");
@@ -48,16 +52,24 @@ internal sealed class Preset
         GlobalOptions.AddArguments(options);
     }
 
-    private void LoadCustomTable(TomlTable table)
+    private void LoadCustomTable(ref TomlTable profile)
     {
-        foreach (var (key, value) in table)
+        var table = profile.TryGetValue("custom", out var value) ? value as TomlTable : null;
+        if (table is null)
+            return;
+
+        foreach (var (key, v) in table)
         {
-            CustomValues[key] = value.Get<string>();
+            CustomValues[key] = v.Get<string>();
         }
     }
 
-    private void LoadSourceTable(TomlTable table)
+    private void LoadSourceTable(ref TomlTable profile)
     {
+        var table = profile.TryGetValue("source", out var value) ? value as TomlTable : null;
+        if (table is null)
+            return;
+
         bool ignore_default_suffixes = table.Get<bool>("ignore_default_suffixes");
 
         if (!ignore_default_suffixes)
@@ -104,15 +116,23 @@ internal sealed class Preset
         }
     }
 
-    private void LoadTargetTable(TomlTable table)
+    private void LoadTargetTable(ref TomlTable profile)
     {
+        var table = profile.TryGetValue("target", out var value) ? value as TomlTable : null;
+        if (table is null)
+            return;
+
         TargetSuffix = table.Get<string>("suffix");
         TargetFolder = table.Get<string>("folder");
         TargetKeepParentLevels = table.Get<int>("keep_parent_level");
     }
 
-    private void LoadInputTables(TomlTableArray tables)
+    private void LoadInputTables(ref TomlTable profile)
     {
+        var tables = profile.TryGetValue("input", out var value) ? value as TomlTableArray : null;
+        if (tables is null)
+            return;
+
         foreach (TomlTable table in tables.Items)
         {
             var input = new ArgumentGroup();
@@ -122,8 +142,12 @@ internal sealed class Preset
         }
     }
 
-    private void LoadOutputTables(TomlTableArray tables)
+    private void LoadOutputTables(ref TomlTable profile)
     {
+        var tables = profile.TryGetValue("output", out var value) ? value as TomlTableArray : null;
+        if (tables is null)
+            return;
+
         foreach (TomlTable table in tables.Items)
         {
             var output = new ArgumentGroup();
@@ -143,12 +167,12 @@ internal sealed class Preset
         };
 
         var profile = Toml.ReadFile(path);
-        result.LoadGeneralTable(profile.Get<TomlTable>("general"));
-        result.LoadCustomTable(profile.Get<TomlTable>("custom"));
-        result.LoadSourceTable(profile.Get<TomlTable>("source"));
-        result.LoadTargetTable(profile.Get<TomlTable>("target"));
-        result.LoadInputTables(profile.Get<TomlTableArray>("input"));
-        result.LoadOutputTables(profile.Get<TomlTableArray>("output"));
+        result.LoadGeneralTable(ref profile);
+        result.LoadCustomTable(ref profile);
+        result.LoadSourceTable(ref profile);
+        result.LoadTargetTable(ref profile);
+        result.LoadInputTables(ref profile);
+        result.LoadOutputTables(ref profile);
 
         return result;
     }

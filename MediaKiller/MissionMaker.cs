@@ -82,11 +82,11 @@ internal sealed class MissionMaker(Preset preset)
         ;
 
         string target = tagReplacer.ReplaceTags(_preset.TargetFolder);
-        if (GlobalArguments.Instance.OutputFolder is not null)
+        if (XEnv.Instance.OutputFolder is not null)
         {
             if (Path.IsPathFullyQualified(target))
-                target = GlobalArguments.Instance.OutputFolder;
-            else target = Path.Combine(GlobalArguments.Instance.OutputFolder, target);
+                target = XEnv.Instance.OutputFolder;
+            else target = Path.Combine(XEnv.Instance.OutputFolder, target);
         }
         target = Path.Combine(target, string.Join(Path.DirectorySeparatorChar, parentParts), targetFileName);
 

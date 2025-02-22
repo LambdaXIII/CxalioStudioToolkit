@@ -34,9 +34,9 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
-        GlobalArguments.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
-        GlobalArguments.Instance.ScriptOutput = settings.ScriptOutput;
-        GlobalArguments.Instance.Debug = settings.Debug;
+        XEnv.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
+        XEnv.Instance.ScriptOutput = settings.ScriptOutput;
+        XEnv.Instance.Debug = settings.Debug;
 
         foreach (var input in settings.Inputs ?? [])
         {
@@ -46,22 +46,22 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                 string i = Path.GetFullPath(input) + ".toml";
                 if (File.Exists(i))
                 {
-                    GlobalArguments.Instance.Presets.Add(Preset.Load(i));
+                    XEnv.Instance.Presets.Add(Preset.Load(i));
                     continue;
                 }
             }
 
             if (lowerExt == ".toml")
             {
-                GlobalArguments.Instance.Presets.Add(Preset.Load(input));
+                XEnv.Instance.Presets.Add(Preset.Load(input));
             }
             else
             {
-                GlobalArguments.Instance.Sources.Add(input);
+                XEnv.Instance.Sources.Add(input);
             }
         }
 
-        SourceExpander sourceExpander = new(GlobalArguments.Instance.Presets, GlobalArguments.Instance.Sources);
+        SourceExpander sourceExpander = new(XEnv.Instance.Presets, XEnv.Instance.Sources);
         foreach (var source in sourceExpander.Expand())
         {
             Console.WriteLine(source);

@@ -1,6 +1,6 @@
 ﻿namespace MediaKiller;
 
-internal sealed class GlobalArguments
+internal sealed class XEnv
 {
     public List<Preset> Presets { get; set; } = [];
 
@@ -13,9 +13,15 @@ internal sealed class GlobalArguments
     public bool Debug { get; set; } = false;
 
 
-    private static readonly Lazy<GlobalArguments> _instance = new(() => new GlobalArguments());
-    private GlobalArguments() { }
-    public static GlobalArguments Instance => _instance.Value;
+    private static readonly Lazy<XEnv> _instance = new(() => new XEnv());
+    private XEnv() { }
+    public static XEnv Instance => _instance.Value;
+
+
+    public static void Err(string message)
+    {
+        Console.Error.WriteLine(message);
+    }
 
 }
 
