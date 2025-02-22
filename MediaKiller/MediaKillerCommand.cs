@@ -61,13 +61,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             }
         }
 
-        foreach (var p in GlobalArguments.Instance.Presets)
-        {
-            Console.WriteLine(p.Name);
-        }
-
-        SourceExpander sourceExpander = new(GlobalArguments.Instance.Presets[0]);
-        foreach (var source in sourceExpander.Expand(GlobalArguments.Instance.Sources))
+        SourceExpander sourceExpander = new(GlobalArguments.Instance.Presets, GlobalArguments.Instance.Sources);
+        foreach (var source in sourceExpander.Expand())
         {
             Console.WriteLine(source);
         }
