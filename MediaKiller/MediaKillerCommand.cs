@@ -35,6 +35,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
         GlobalArguments.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
+        GlobalArguments.Instance.ScriptOutput = settings.ScriptOutput;
         GlobalArguments.Instance.Debug = settings.Debug;
 
         foreach (var input in settings.Inputs ?? [])

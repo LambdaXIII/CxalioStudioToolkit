@@ -8,6 +8,8 @@ internal sealed class GlobalArguments
 
     public string? OutputFolder { get; set; } = null;
 
+    public string? ScriptOutput { get; set; } = null;
+
     public bool Debug { get; set; } = false;
 
 
