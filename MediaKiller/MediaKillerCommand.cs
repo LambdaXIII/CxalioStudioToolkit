@@ -38,6 +38,12 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
         XEnv.Instance.Debug = settings.Debug;
 
+        if (settings.ScriptOutput is not null)
+        {
+            SaveSamplePreset(settings.ScriptOutput);
+            return 0;
+        }
+
         foreach (var input in settings.Inputs ?? [])
         {
             string lowerExt = Path.GetExtension(input).ToLower();
@@ -73,5 +79,24 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
 
         return 0;
+    } // Execute
+
+    public static void SaveSamplePreset(string path)
+    {
+        var assembly = typeof(MediaKillerCommand).Assembly;
+        using var stream = assembly.GetManifestResourceStream("MediaKiller.Resources.sample_preset.toml");
+        if (stream == null)
+        {
+            throw new FileNotFoundException("Embedded resource not found: sample_preset.toml");
+        }
+
+        if (Path.GetExtension(path) != ".toml")
+        {
+            path += ".toml";
+        }
+
+        using var reader = new StreamReader(stream);
+        var content = reader.ReadToEnd();
+        File.WriteAllText(path, content);
     }
 }
