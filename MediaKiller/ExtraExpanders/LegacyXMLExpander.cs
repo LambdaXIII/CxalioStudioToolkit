@@ -14,6 +14,11 @@ internal sealed class LegacyXMLExpander : ISourcePreExpander
             return false;
         }
 
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
         XDocument doc = XDocument.Load(path);
 
         if (doc.DocumentType is null || doc.DocumentType.Name != "xmeml")

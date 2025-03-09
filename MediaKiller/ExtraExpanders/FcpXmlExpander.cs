@@ -14,6 +14,11 @@ class FcpXmlExpander : ISourcePreExpander
             return false;
         }
 
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
         XDocument doc = XDocument.Load(path);
 
         if (doc.DocumentType is null || doc.DocumentType.Name != "fcpxml")
@@ -59,6 +64,11 @@ class FcpXmlDirectoryExpander : ISourcePreExpander
     public bool IsAcceptable(string path)
     {
         if (!path.EndsWith(".fcpxmld", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!Directory.Exists(path))
         {
             return false;
         }
