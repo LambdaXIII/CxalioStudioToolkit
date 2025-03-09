@@ -1,4 +1,5 @@
 ﻿using CxStudio;
+using MediaKiller.ExtraExpanders;
 namespace MediaKiller;
 
 class SourceExpander(Preset p)
@@ -12,9 +13,34 @@ class SourceExpander(Preset p)
         FileValidator = new ExtensionWhiteListChecker(p.AcceptableSuffixes)
     };
 
-    public IEnumerable<string> Expand(IEnumerable<string> sources)
+    private readonly List<ISourcePreExpander> PreExpanders = [
+    new LegacyXMLExpander(),new FcpXmlExpander(),new FcpXmlDirectoryExpander()
+        ];
+
+
+    private IEnumerable<string> PreExpand(IEnumerable<string> sources)
     {
         foreach (string source in sources)
+        {
+            bool pre_expanded = false;
+            foreach (ISourcePreExpander pre_expander in PreExpanders)
+            {
+                if (pre_expander.IsAcceptable(source))
+                {
+                    pre_expanded = true;
+                    foreach (string expanded in pre_expander.Expand(source))
+                    {
+                        yield return expanded;
+                    }
+                }
+            }
+            if (!pre_expanded) yield return source;
+        }
+    }
+
+    public IEnumerable<string> Expand(IEnumerable<string> sources)
+    {
+        foreach (string source in PreExpand(sources))
         {
             DirectoryExpander expander = new(source, DefaultSettings);
             foreach (string file in expander.Expand())
