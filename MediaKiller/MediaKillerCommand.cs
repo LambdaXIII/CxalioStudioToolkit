@@ -1,4 +1,5 @@
-﻿using Spectre.Console.Cli;
+﻿using Spectre.Console;
+using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
@@ -15,7 +16,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
         [Description("Generate a new profile instead of processing it.")]
         [CommandOption("-g|--generate")]
-        [DefaultValue(true)]
+        [DefaultValue(false)]
         public bool GenerateProfile { get; init; }
 
         [Description("The output directory.")]
@@ -67,6 +68,9 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             }
         }
 
+        XEnv.ReportPresets();
+        XEnv.ReportSources();
+
         foreach (Preset p in XEnv.Instance.Presets)
         {
             SourceExpander expander = new(p);
@@ -85,21 +89,21 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
     {
         if (path == string.Empty)
         {
-            throw new ArgumentException("No path specified.");
+            AnsiConsole.WriteException(new ArgumentException("No path specified."));
         }
-
-        Console.Error.WriteLine("Saving sample preset to: " + path);
-
-        var assembly = typeof(MediaKillerCommand).Assembly;
-
-        using var stream = assembly.GetManifestResourceStream("MediaKiller.example_preset.toml")
-            ?? throw new FileNotFoundException("Embedded resource not found: example_preset.toml");
 
         path = Path.GetFullPath(path);
         if (Path.GetExtension(path) != ".toml")
         {
             path += ".toml";
         }
+
+        AnsiConsole.MarkupLine("生成示例预设： [yellow]{0}[/]", Path.GetFileName(path));
+
+        var assembly = typeof(MediaKillerCommand).Assembly;
+
+        using var stream = assembly.GetManifestResourceStream("MediaKiller.example_preset.toml")
+            ?? throw new FileNotFoundException("Embedded resource not found: example_preset.toml");
 
         var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -114,6 +118,6 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             writer.WriteLine(reader.ReadLine());
         }
 
-        Console.Error.WriteLine("Sample preset saved.");
+        AnsiConsole.MarkupLine("生成完毕，[red]请在修改之后使用！[/]");
     }
 }
