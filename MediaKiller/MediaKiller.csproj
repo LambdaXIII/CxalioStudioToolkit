@@ -8,11 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="example_project.toml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="example_project.toml" />
+    <EmbeddedResource Include="example_preset.toml" />
   </ItemGroup>
 
   <ItemGroup>

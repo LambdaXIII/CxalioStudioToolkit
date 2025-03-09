@@ -38,9 +38,9 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
         XEnv.Instance.Debug = settings.Debug;
 
-        if (settings.ScriptOutput is not null)
+        if (settings.GenerateProfile)
         {
-            SaveSamplePreset(settings.ScriptOutput);
+            SaveSamplePreset(settings.Inputs?.FirstOrDefault("") ?? "");
             return 0;
         }
 
@@ -83,20 +83,37 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
     public static void SaveSamplePreset(string path)
     {
-        var assembly = typeof(MediaKillerCommand).Assembly;
-        using var stream = assembly.GetManifestResourceStream("MediaKiller.Resources.sample_preset.toml");
-        if (stream == null)
+        if (path == string.Empty)
         {
-            throw new FileNotFoundException("Embedded resource not found: sample_preset.toml");
+            throw new ArgumentException("No path specified.");
         }
 
+        Console.Error.WriteLine("Saving sample preset to: " + path);
+
+        var assembly = typeof(MediaKillerCommand).Assembly;
+
+        using var stream = assembly.GetManifestResourceStream("MediaKiller.example_preset.toml")
+            ?? throw new FileNotFoundException("Embedded resource not found: example_preset.toml");
+
+        path = Path.GetFullPath(path);
         if (Path.GetExtension(path) != ".toml")
         {
             path += ".toml";
         }
 
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
         using var reader = new StreamReader(stream);
-        var content = reader.ReadToEnd();
-        File.WriteAllText(path, content);
+        using var writer = new StreamWriter(path);
+        while (!reader.EndOfStream)
+        {
+            writer.WriteLine(reader.ReadLine());
+        }
+
+        Console.Error.WriteLine("Sample preset saved.");
     }
 }
