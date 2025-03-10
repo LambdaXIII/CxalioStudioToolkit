@@ -57,7 +57,7 @@ class FcpXmlDirectoryExpander : ISourcePreExpander
 {
     private readonly FcpXmlExpander fcpXmlExpander = new();
 
-    private string GetInfoPath(string path)
+    private static string GetInfoPath(string path)
     {
         return Path.Combine(path, "Info.fcpxml");
     }
