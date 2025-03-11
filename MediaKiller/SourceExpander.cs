@@ -14,8 +14,9 @@ class SourceExpander(Preset p)
     };
 
     private readonly List<ISourcePreExpander> PreExpanders = [
-    new LegacyXMLExpander(),new FcpXmlExpander(),new FcpXmlDirectoryExpander()
-        ];
+        new LegacyXMLExpander(),new FcpXmlExpander(),new FcpXmlDirectoryExpander(),
+        new FileListExpander(),new CsvMetadataExpander()
+    ];
 
 
     private IEnumerable<string> PreExpand(IEnumerable<string> sources)
