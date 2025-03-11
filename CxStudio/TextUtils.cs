@@ -5,7 +5,7 @@ namespace CxStudio;
 
 public class TextUtils
 {
-    private static readonly Regex _urlpattern = new(@"^file://(localhost/|/)", RegexOptions.Compiled);
+
 
     public static string QuoteSpacedString(string text)
     {
@@ -16,6 +16,7 @@ public class TextUtils
         return text;
     }
 
+    private static readonly Regex _urlpattern = new(@"^file://(localhost/|/)", RegexOptions.Compiled);
     public static string? UrlToPath(string url)
     {
         url = HttpUtility.UrlDecode(url);
@@ -24,5 +25,20 @@ public class TextUtils
             return _urlpattern.Replace(url, string.Empty);
         }
         return null;
+    }
+
+    public class FieldFiller(IEnumerable<string> titles)
+    {
+        private readonly List<string> _titles = (List<string>)titles;
+
+        public Dictionary<string, string> Parse(IEnumerable<string> values)
+        {
+            Dictionary<string, string> result = [];
+            foreach (var (title, value) in _titles.Zip(values))
+            {
+                result[title] = value;
+            }
+            return result;
+        }
     }
 }
