@@ -26,19 +26,4 @@ public class TextUtils
         }
         return null;
     }
-
-    public class FieldFiller(IEnumerable<string> titles)
-    {
-        private readonly List<string> _titles = (List<string>)titles;
-
-        public Dictionary<string, string> Parse(IEnumerable<string> values)
-        {
-            Dictionary<string, string> result = [];
-            foreach (var (title, value) in _titles.Zip(values))
-            {
-                result[title] = value;
-            }
-            return result;
-        }
-    }
 }
