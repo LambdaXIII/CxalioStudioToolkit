@@ -49,7 +49,9 @@ class CsvMetadataExpander : ISourcePreExpander
                 continue;
             string file_name = checker.GetValue("File Name", values) ?? "";
             string directory = checker.GetValue("Clip Directory", values) ?? "";
-            yield return Path.Combine(directory, file_name);
+            string res = Path.Combine(directory, file_name);
+            if (!string.IsNullOrEmpty(res))
+                yield return res;
         }
     }
 }
