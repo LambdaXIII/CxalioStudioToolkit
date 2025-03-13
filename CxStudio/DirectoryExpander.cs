@@ -20,6 +20,11 @@ public class ChainPathChecker : IPathChecker
         _checkers = [];
     }
 
+    public ChainPathChecker(IEnumerable<IPathChecker> checkers)
+    {
+        _checkers = new List<IPathChecker>(checkers);
+    }
+
     public ChainPathChecker Add(IPathChecker checker)
     {
         _checkers.Add(checker);
@@ -35,7 +40,11 @@ public class ChainPathChecker : IPathChecker
         }
         return true;
     }
+}
 
+public class FileExistenceChecker : IPathChecker
+{
+    public bool Check(string path) => File.Exists(path);
 }
 
 public class ExtensionWhiteListChecker : IPathChecker
@@ -62,7 +71,7 @@ public struct DirectoryExpanderSettings
 {
     public string RelativeAnchorPath;
     public bool AcceptFiles, AcceptDirectories, IncludeSubDirectories;
-    public IPathChecker DirectoryValidator, FileValidator;
+    public IPathChecker DirectoryChecker, FileChecker;
 
     public DirectoryExpanderSettings()
     {
@@ -70,8 +79,8 @@ public struct DirectoryExpanderSettings
         AcceptFiles = true;
         AcceptDirectories = true;
         IncludeSubDirectories = true;
-        DirectoryValidator = new DefaultPathChecker();
-        FileValidator = DirectoryValidator;
+        DirectoryChecker = new DefaultPathChecker();
+        FileChecker = DirectoryChecker;
     }
 }
 
@@ -104,7 +113,7 @@ public class DirectoryExpander
             var directories = Directory.GetDirectories(SourcePath, "*", Settings.IncludeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
             foreach (var directory in directories)
             {
-                if (Settings.AcceptDirectories && Settings.DirectoryValidator.Check(directory))
+                if (Settings.AcceptDirectories && Settings.DirectoryChecker.Check(directory))
                 {
                     int hash = directory.GetHashCode();
                     if (!cache.Contains(hash) && Settings.AcceptDirectories)
@@ -121,7 +130,7 @@ public class DirectoryExpander
                 foreach (var file in files)
                 {
                     int hash = file.GetHashCode();
-                    if (Settings.FileValidator.Check(file))
+                    if (Settings.FileChecker.Check(file))
                     {
                         if (!cache.Contains(hash))
                         {
@@ -134,7 +143,7 @@ public class DirectoryExpander
         }
         else if (File.Exists(SourcePath))
         {
-            if (Settings.AcceptFiles && Settings.FileValidator.Check(SourcePath))
+            if (Settings.AcceptFiles && Settings.FileChecker.Check(SourcePath))
             {
                 yield return SourcePath;
             }

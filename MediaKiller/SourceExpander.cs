@@ -10,7 +10,10 @@ class SourceExpander(Preset p)
         AcceptDirectories = false,
         AcceptFiles = true,
         IncludeSubDirectories = true,
-        FileValidator = new ExtensionWhiteListChecker(p.AcceptableSuffixes)
+        FileChecker = new ChainPathChecker([
+            new ExtensionWhiteListChecker(p.AcceptableSuffixes),
+            new FileExistenceChecker()
+        ])
     };
 
     private readonly List<ISourcePreExpander> PreExpanders = [
