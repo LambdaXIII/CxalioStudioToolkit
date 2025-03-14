@@ -16,7 +16,6 @@ struct Mission
     {
         List<string> cmd =
         [
-            FFmpegPath,
             .. GlobalOptions.Arguments(),
         ];
 
@@ -38,6 +37,6 @@ struct Mission
 
     public readonly string GetFullCommand()
     {
-        return string.Join(' ', GetCommandElements());
+        return string.Join(' ', [FFmpegPath, .. GetCommandElements()]);
     }
 }
