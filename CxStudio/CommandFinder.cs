@@ -45,6 +45,9 @@ public class CommandFinder
 
     public string? Find(string cmd)
     {
+        if (Path.IsPathFullyQualified(cmd))
+            return cmd;
+
         foreach (string search_path in SearchPaths)
         {
             string? full_path = Path.Combine(search_path, cmd);
