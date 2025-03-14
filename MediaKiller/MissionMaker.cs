@@ -60,6 +60,7 @@ internal sealed class MissionMaker(Preset preset)
 
         TagReplacer tagReplacer = new TagReplacer()
             .InstallProvider("preset", _presetInfoProvider)
+            .InstallProvider("profile", _presetInfoProvider)
             .InstallProvider("custom", _presetCustomInfoProvider)
             .InstallProvider("seq", _countNumberProvider)
             .InstallProvider("source", new FileInfoProvider(source));
