@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using CxStudio.CxConfig;
+using Spectre.Console;
 
 namespace MediaKiller;
 
@@ -18,6 +19,10 @@ internal sealed class XEnv
     private static readonly Lazy<XEnv> _instance = new(() => new XEnv());
     private XEnv() { }
     public static XEnv Instance => _instance.Value;
+
+    public static readonly string AppName = "MediaKiller";
+    public static readonly string AppVersion = "0.1.0";
+    public static readonly CxConfigManager ConfigManaer = new(AppName, AppVersion);
 
 
     public static void Err(string message)
