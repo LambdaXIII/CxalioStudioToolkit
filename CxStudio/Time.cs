@@ -6,7 +6,7 @@ namespace CxStudio
     {
         readonly long _ms = 0;
         readonly static string _timecodePattern = @"(\d{2}):(\d{2}):(\d{2})[;:](\d{2})";
-        readonly static string _timestampPattern = @"(\d{2}):(\d{2}):(\d{2})[;:,.](\d{2,3})";
+        readonly static string _timestampPattern = @"(\d{2}):(\d{2}):(\d{2})[;:,.](\d{1,3})";
 
         public Time(double seconds)
         {
@@ -50,7 +50,9 @@ namespace CxStudio
                 var hours = int.Parse(match.Groups[1].Value);
                 var minutes = int.Parse(match.Groups[2].Value);
                 var seconds = int.Parse(match.Groups[3].Value);
-                var milliseconds = int.Parse(match.Groups[4].Value);
+
+                var millisecondsStr = match.Groups[4].Value.PadRight(3, '0');
+                var milliseconds = int.Parse(millisecondsStr);
                 return new Time(hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0);
             }
             return null;
