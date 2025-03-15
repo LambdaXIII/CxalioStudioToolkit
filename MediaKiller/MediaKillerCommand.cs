@@ -79,6 +79,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             {
                 Mission m = maker.Make(source);
                 AnsiConsole.WriteLine(m.GetFullCommand());
+                MissionRunner runner = new(m);
+                runner.Run();
             }
         }
 

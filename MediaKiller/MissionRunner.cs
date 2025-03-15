@@ -1,20 +1,51 @@
 ﻿using System.Diagnostics;
-using Xabe.FFmpeg;
 namespace MediaKiller;
 
 class MissionRunner
 {
     public readonly Mission Mission;
 
-    public void run()
+    public MissionRunner(Mission mission)
     {
-        var conversion = FFmpeg.Conversions.New()
-            .AddParameter(string.Join(' ', Mission.GetCommandElements()));
+        Mission = mission;
+    }
 
-        conversion.OnProgress += (sender, args) =>
+    public void Run()
+    {
+        foreach (var output_group in Mission.Outputs)
         {
-            ar percent = (int)(Math.Round(args.Duration.TotalSeconds / args.TotalLength.TotalSeconds, 2) * 100);
-            Debug.WriteLine($"[{args.Duration} / {args.TotalLength}] {percent}%");
+            string? dir = Path.GetDirectoryName(output_group.FileName);
+            if (dir is not null)
+                Directory.CreateDirectory(dir);
+        }
+
+        ProcessStartInfo start_info = new()
+        {
+            FileName = Mission.FFmpegPath,
+            Arguments = string.Join(' ', Mission.GetCommandElements()),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = false,
         };
+
+        using (Process process = new())
+        {
+            process.StartInfo = start_info;
+            process.OutputDataReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    Console.WriteLine(e.Data ?? "");
+            };
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    Console.WriteLine(e.Data ?? "");
+            };
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+        }
     }
 }
