@@ -31,7 +31,7 @@ public class FFmpeg
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
-            CreateNoWindow = false,
+            CreateNoWindow = true,
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };

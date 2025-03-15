@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using CxStudio.FFmpegHelper;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -82,6 +83,11 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
 
         AnsiConsole.MarkupLine("为 [yellow]{0}[/] 个预设生成 [yellow]{1}[/] 个任务。", XEnv.Instance.Presets.Count, missions.Count);
+        foreach (var m in missions)
+        {
+            var info = new FFProbe(m.Inputs[0].FileName).GetFormatInfo();
+            AnsiConsole.MarkupLine("[yellow]{0}[/]", info.Duration.ToSeconds());
+        }
 
         return 0;
     } // Execute
