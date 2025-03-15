@@ -15,6 +15,8 @@ internal sealed class XEnv
 
     public bool Debug { get; set; } = false;
 
+    public bool WannaQuit = false;
+
 
     private static readonly Lazy<XEnv> _instance = new(() => new XEnv());
     private XEnv() { }
@@ -56,5 +58,10 @@ internal sealed class XEnv
         AnsiConsole.MarkupLine("发现 [yellow]{0}[/] 个来源路径。", Instance.Sources.Count);
     }
 
+    public void HandleCancelation()
+    {
+        AnsiConsole.MarkupLine("[red]用户取消了操作。[/]");
+        WannaQuit = true;
+    }
 }
 

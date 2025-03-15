@@ -71,18 +71,17 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         XEnv.ReportPresets();
         XEnv.ReportSources();
 
+
+        List<Mission> missions = [];
         foreach (Preset p in XEnv.Instance.Presets)
         {
             SourceExpander expander = new(p);
             MissionMaker maker = new(p);
             foreach (string source in expander.Expand(XEnv.Instance.Sources))
-            {
-                Mission m = maker.Make(source);
-                AnsiConsole.WriteLine(m.FullCommand);
-                MissionRunner runner = new(m);
-                runner.Run();
-            }
+                missions.Add(maker.Make(source));
         }
+
+        AnsiConsole.MarkupLine("为 [yellow]{0}[/] 个预设生成 [yellow]{1}[/] 个任务。", XEnv.Instance.Presets.Count, missions.Count);
 
         return 0;
     } // Execute
