@@ -34,7 +34,7 @@ class ScriptMaker
             Writer.WriteLine($"mkdir -p {TextUtils.QuoteSpacedString(folder)}");
         }
 
-        Writer.WriteLine(mission.GetFullCommand());
+        Writer.WriteLine(mission.FullCommand);
     }
 
 }

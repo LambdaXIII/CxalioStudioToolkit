@@ -2,7 +2,7 @@
   "profiles": {
     "MediaKiller": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\temp\\E01v5Butterfly.mp4\"\r\n\"D:\\temp\\腾讯4K播出版_NV.toml\"\r\n\"D:\\temp\\送审样片压小_NV.toml\"\r\n\"D:\\temp\\E01v5_Butterfly.mov\""
+      "commandLineArgs": "送审样片压小_NV.toml\r\nD:\\temp\\陪我去见心上人Z01F_2KDEMO.mp4"
     }
   }
 }

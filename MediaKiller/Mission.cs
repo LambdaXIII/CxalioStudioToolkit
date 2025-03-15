@@ -35,8 +35,7 @@ struct Mission
         return cmd;
     }
 
-    public readonly string GetFullCommand()
-    {
-        return string.Join(' ', [FFmpegPath, .. GetCommandElements()]);
-    }
+
+    public readonly string CommandArgument => string.Join(' ', GetCommandElements());
+    public readonly string FullCommand => $"{FFmpegPath} {CommandArgument}";
 }

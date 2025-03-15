@@ -26,7 +26,7 @@ public struct FileSize
 
 
 
-    static public FileSize FromBytes(ulong bytes, Standards standard = Standards.SI)
+    static public FileSize FromBytes(ulong bytes = 0, Standards standard = Standards.SI)
     {
         return new FileSize
         {
@@ -109,23 +109,40 @@ public struct FileSize
 
     static public FileSize FromString(string size, Standards standard = Standards.SI)
     {
+        if (string.IsNullOrWhiteSpace(size))
+        {
+            return FromBytes(0, standard);
+        }
+
+        var int_match = Regex.Match(size, @"\d+");
+        if (int_match.Success)
+        {
+            return FromBytes(ulong.Parse(int_match.Value), standard);
+        }
+
+        var double_match = Regex.Match(size, @"\d+\.\d+");
+        if (double_match.Success)
+        {
+            return FromKilobytes(double.Parse(double_match.Value), standard);
+        }
+
         var match = Regex.Match(size, @"(?<size>\d+(\.\d+)?)\s*(?<unit>[KMGTPEZY]i?B)", RegexOptions.IgnoreCase);
         if (!match.Success)
         {
             throw new FormatException("Invalid size format.");
         }
         var value = double.Parse(match.Groups["size"].Value);
-        var unit = match.Groups["unit"].Value.ToUpper();
+        var unit = match.Groups["unit"].Value.ToUpper().First();
         return unit switch
         {
-            "KB" => FromKilobytes(value, standard),
-            "MB" => FromMegabytes(value, standard),
-            "GB" => FromGigabytes(value, standard),
-            "TB" => FromTerabytes(value, standard),
-            "PB" => FromPetabytes(value, standard),
-            "EB" => FromExabytes(value, standard),
-            "ZB" => FromZettabytes(value, standard),
-            "YB" => FromYottabytes(value, standard),
+            'K' => FromKilobytes(value, standard),
+            'M' => FromMegabytes(value, standard),
+            'G' => FromGigabytes(value, standard),
+            'T' => FromTerabytes(value, standard),
+            'P' => FromPetabytes(value, standard),
+            'E' => FromExabytes(value, standard),
+            'Z' => FromZettabytes(value, standard),
+            'Y' => FromYottabytes(value, standard),
             _ => throw new FormatException("Invalid size format.")
         };
     }

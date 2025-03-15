@@ -78,7 +78,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             foreach (string source in expander.Expand(XEnv.Instance.Sources))
             {
                 Mission m = maker.Make(source);
-                AnsiConsole.WriteLine(m.GetFullCommand());
+                AnsiConsole.WriteLine(m.FullCommand);
                 MissionRunner runner = new(m);
                 runner.Run();
             }

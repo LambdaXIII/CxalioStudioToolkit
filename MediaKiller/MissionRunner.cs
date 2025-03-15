@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using CxStudio.FFmpegHelper;
+using Spectre.Console;
 namespace MediaKiller;
 
 class MissionRunner
@@ -12,40 +13,19 @@ class MissionRunner
 
     public void Run()
     {
-        foreach (var output_group in Mission.Outputs)
+        foreach (var oGroup in Mission.Outputs)
         {
-            string? dir = Path.GetDirectoryName(output_group.FileName);
-            if (dir is not null)
-                Directory.CreateDirectory(dir);
-        }
+            string? folder = Path.GetDirectoryName(Path.GetFullPath(oGroup.FileName));
+            if (folder is not null)
+                Directory.CreateDirectory(folder);
 
-        ProcessStartInfo start_info = new()
+        }
+        var ffmpeg = new FFmpeg(Mission.FFmpegPath, Mission.CommandArgument);
+        ffmpeg.CodingStatusChanged += (sender, status) =>
         {
-            FileName = Mission.FFmpegPath,
-            Arguments = string.Join(' ', Mission.GetCommandElements()),
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = false,
+            AnsiConsole.MarkupLine($"[red]{status.CurrentFrame}[/]");
         };
 
-        using (Process process = new())
-        {
-            process.StartInfo = start_info;
-            process.OutputDataReceived += (sender, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                    Console.WriteLine(e.Data ?? "");
-            };
-            process.ErrorDataReceived += (sender, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
-                    Console.WriteLine(e.Data ?? "");
-            };
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-            process.WaitForExit();
-        }
+        ffmpeg.Run();
     }
 }
