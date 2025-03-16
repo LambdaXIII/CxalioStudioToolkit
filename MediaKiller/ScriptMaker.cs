@@ -4,37 +4,33 @@ namespace MediaKiller;
 
 class ScriptMaker
 {
-    private readonly TextWriter Writer;
-    private readonly HashSet<string> Folders = [];
+    private IEnumerable<Mission> _missions;
+    private HashSet<string> _cached_folders = [];
 
-    public ScriptMaker(TextWriter? writer)
+    public ScriptMaker(IEnumerable<Mission> missions)
     {
-        Writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        _missions = missions;
     }
 
-    ~ScriptMaker()
+    public IEnumerable<string> Lines()
     {
-        Writer.Flush();
-        Writer.Close();
-    }
-
-    public void WriteMission(Mission mission)
-    {
-        foreach (ArgumentGroup oGroup in mission.Outputs)
+        foreach (Mission m in _missions)
         {
-            string? folder = Path.GetDirectoryName(
-                Path.GetFullPath(oGroup.FileName));
-
-            if (folder is null || Folders.Contains(folder))
+            foreach (var oGroup in m.Outputs)
             {
-                continue;
+                string oFolder = Path.GetDirectoryName(oGroup.FileName)!;
+                if (_cached_folders.Contains(oFolder)) continue;
+
+                _cached_folders.Add(oFolder);
+                yield return $"mkdir -p {TextUtils.QuoteSpacedString(oFolder)}";
             }
-
-            Folders.Add(folder);
-            Writer.WriteLine($"mkdir -p {TextUtils.QuoteSpacedString(folder)}");
+            yield return m.FullCommand;
         }
-
-        Writer.WriteLine(mission.FullCommand);
     }
 
+    public void WriteTo(ref StreamWriter writer)
+    {
+        foreach (string line in Lines())
+            writer.WriteLine(line);
+    }
 }

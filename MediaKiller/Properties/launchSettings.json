@@ -2,7 +2,7 @@
   "profiles": {
     "MediaKiller": {
       "commandName": "Project",
-      "commandLineArgs": "送审样片压小_NV.toml\r\nD:\\temp\\陪我去见心上人Z01F_2KDEMO.mp4"
+      "commandLineArgs": "t.toml\r\n\"D:\\.secs\\temp\\POV骑大鸡.mp4\"\r\n\"C:\\Users\\xiii_\\Videos\\480 (1).mp4\"\r\n\"C:\\Users\\xiii_\\Videos\\video_2025-03-12_21-03-10.mp4\"\r\n\"C:\\Users\\xiii_\\Videos\\video_2025-03-09_08-52-30.mp4\"\r\n\"D:\\.secs\\temp\\Senat0r_stretchfit_大白.mp4\"\r\n-s a.sh\r\n-d"
     }
   }
 }

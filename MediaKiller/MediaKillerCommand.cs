@@ -86,7 +86,23 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         foreach (var m in missions)
         {
             var info = new FFProbe(m.Inputs[0].FileName).GetFormatInfo();
-            AnsiConsole.MarkupLine("[yellow]{0}[/]", info.Duration.ToSeconds());
+            AnsiConsole.MarkupLine("[blue]{1}[/] : [yellow]{0}[/]", info.Duration.ToSeconds(), info.FileName);
+        }
+
+        if (XEnv.Instance.ScriptOutput is not null)
+        {
+            AnsiConsole.MarkupLine("生成目标脚本 [cyan]{0}[/] ...", Path.GetFileName(XEnv.Instance.ScriptOutput));
+
+            using StreamWriter writer = new(XEnv.Instance.ScriptOutput);
+            ScriptMaker script_maker = new(missions);
+            foreach (var line in script_maker.Lines())
+            {
+                writer.WriteLine(line);
+                if (XEnv.Instance.Debug)
+                    AnsiConsole.MarkupLine("[grey]{0}[/]", line);
+            }
+
+            AnsiConsole.MarkupLine("[cyan]脚本生成完毕。[cyan]");
         }
 
         return 0;
