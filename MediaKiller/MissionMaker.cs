@@ -97,8 +97,10 @@ internal sealed class MissionMaker(Preset preset)
 
         Mission mission = new()
         {
+            Source = source,
             FFmpegPath = _preset.FFmpegPath,
-            GlobalOptions = _preset.GlobalOptions
+            GlobalOptions = _preset.GlobalOptions,
+            Preset = _preset
         };
 
         if (_preset.HardwareAccelerate.Length > 0)

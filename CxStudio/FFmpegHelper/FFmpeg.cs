@@ -7,8 +7,8 @@ public delegate void CodingStatusEventHandler(object sender, CodingStatus e);
 
 public class FFmpeg
 {
-    private readonly string _ffmpegPath;
-    private readonly string _ffmpegArguments;
+    public readonly string FFmpegBin;
+    public readonly string FFmpegArguments;
     private DateTime _startTime;
     private CancellationTokenSource _cancelToken;
 
@@ -16,8 +16,8 @@ public class FFmpeg
 
     public FFmpeg(string ffmpeg_bin = "ffmpeg", string args = "")
     {
-        _ffmpegPath = ffmpeg_bin;
-        _ffmpegArguments = args;
+        FFmpegBin = ffmpeg_bin;
+        FFmpegArguments = args;
         _startTime = DateTime.Now;
         _cancelToken = new();
     }
@@ -26,8 +26,8 @@ public class FFmpeg
     {
         return new ProcessStartInfo
         {
-            FileName = _ffmpegPath,
-            Arguments = _ffmpegArguments,
+            FileName = FFmpegBin,
+            Arguments = FFmpegArguments,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -43,8 +43,8 @@ public class FFmpeg
             return;
 
         var status = CodingStatus.FromStatusLine(e.Data);
-        status.FFmpegBin = _ffmpegPath;
-        status.FfmpegArguments = _ffmpegArguments;
+        status.FFmpegBin = FFmpegBin;
+        status.FfmpegArguments = FFmpegArguments;
         status.ProcessStart = _startTime;
 
         CodingStatusChanged?.Invoke(this, (CodingStatus)status);

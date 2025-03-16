@@ -1,5 +1,4 @@
-﻿using CxStudio.FFmpegHelper;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -83,11 +82,6 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
 
         AnsiConsole.MarkupLine("为 [yellow]{0}[/] 个预设生成 [yellow]{1}[/] 个任务。", XEnv.Instance.Presets.Count, missions.Count);
-        foreach (var m in missions)
-        {
-            var info = new FFProbe(m.Inputs[0].FileName).GetFormatInfo();
-            AnsiConsole.MarkupLine("[blue]{1}[/] : [yellow]{0}[/]", info.Duration.ToSeconds(), info.FileName);
-        }
 
         if (XEnv.Instance.ScriptOutput is not null)
         {
@@ -105,8 +99,32 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             AnsiConsole.MarkupLine("[cyan]脚本生成完毕。[cyan]");
         }
 
+        Transcode(missions);
+
         return 0;
     } // Execute
+
+    private void Transcode(IEnumerable<Mission> missions)
+    {
+        AnsiConsole.Progress()
+            .Start(ctx =>
+            {
+                var total_task = ctx.AddTask("Transcoding");
+                total_task.MaxValue(missions.Count());
+                foreach (Mission mission in missions)
+                {
+                    string source_name = Path.GetFileName(mission.Source);
+                    MissionRunner runner = new(mission, ctx.AddTask(source_name));
+                    runner.Run();
+                    total_task.Increment(1);
+                }
+                while (!ctx.IsFinished)
+                {
+                    if (XEnv.Instance.WannaQuit)
+                        break;
+                }
+            });
+    }
 
     public static void SaveSamplePreset(string path)
     {

@@ -11,6 +11,8 @@ internal sealed class Preset
     public string Name = string.Empty;
     public string Description = string.Empty;
     public string FFmpegPath = "ffmpeg";
+    public string FFprobePath => Path.Combine(Path.GetDirectoryName(FFmpegPath) ?? "", "ffprobe");
+
 
     public bool Overwrite = false;
     public string HardwareAccelerate = "auto";

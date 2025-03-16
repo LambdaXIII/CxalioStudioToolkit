@@ -3,14 +3,31 @@ namespace MediaKiller;
 
 struct Mission
 {
-    public string FFmpegPath = string.Empty;
+    public string FFmpegPath;
+    public string Source;
 
-    public ArgumentGroup GlobalOptions = new();
+    public ArgumentGroup GlobalOptions;
 
-    public List<ArgumentGroup> Inputs = [];
-    public List<ArgumentGroup> Outputs = [];
+    public List<ArgumentGroup> Inputs;
+    public List<ArgumentGroup> Outputs;
 
-    public Mission() { }
+    public required Preset Preset;
+
+    //public Mission(string source, Preset preset)
+    //{
+    //    Source = source;
+    //    Preset = preset;
+    //}
+
+    public Mission()
+    {
+        FFmpegPath = "ffmpeg";
+        Source = string.Empty;
+        GlobalOptions = new();
+        Inputs = [];
+        Outputs = [];
+    }
+
 
     public readonly List<string> GetCommandElements()
     {
