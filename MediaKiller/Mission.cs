@@ -13,6 +13,8 @@ struct Mission
 
     public required Preset Preset;
 
+    public readonly string Name => Path.GetFileNameWithoutExtension(Source);
+
     //public Mission(string source, Preset preset)
     //{
     //    Source = source;

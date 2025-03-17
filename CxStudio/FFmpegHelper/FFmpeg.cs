@@ -50,7 +50,7 @@ public class FFmpeg
         CodingStatusChanged?.Invoke(this, (CodingStatus)status);
     }
 
-    public void Run()
+    public Task Run()
     {
         var process = new Process
         {
@@ -66,8 +66,7 @@ public class FFmpeg
         process.BeginErrorReadLine();
         process.BeginOutputReadLine();
 
-        //await process.WaitForExitAsync(_cancelToken.Token);
-        process.WaitForExit();
+        return process.WaitForExitAsync(_cancelToken.Token);
     }
 
     public void Cancel()

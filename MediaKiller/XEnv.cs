@@ -63,5 +63,11 @@ internal sealed class XEnv
         AnsiConsole.MarkupLine("[red]用户取消了操作。[/]");
         WannaQuit = true;
     }
+
+    public static void DebugMsg(string? msg)
+    {
+        if (Instance.Debug && msg is not null)
+            AnsiConsole.MarkupLine("[grey]{0}[/]", msg);
+    }
 }
 

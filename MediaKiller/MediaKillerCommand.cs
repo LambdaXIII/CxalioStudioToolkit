@@ -39,6 +39,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
         XEnv.Instance.Debug = settings.Debug;
 
+        XEnv.DebugMsg("MediaKiller started.  :)");
+
         if (settings.GenerateProfile)
         {
             SaveSamplePreset(settings.Inputs?.FirstOrDefault("") ?? "");
@@ -75,10 +77,15 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         List<Mission> missions = [];
         foreach (Preset p in XEnv.Instance.Presets)
         {
+            XEnv.DebugMsg($"Expanding sources for preset {p.Name}");
+
             SourceExpander expander = new(p);
             MissionMaker maker = new(p);
             foreach (string source in expander.Expand(XEnv.Instance.Sources))
+            {
                 missions.Add(maker.Make(source));
+                XEnv.DebugMsg($"Mission added: {source}");
+            }
         }
 
         AnsiConsole.MarkupLine("为 [yellow]{0}[/] 个预设生成 [yellow]{1}[/] 个任务。", XEnv.Instance.Presets.Count, missions.Count);
@@ -114,8 +121,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                 foreach (Mission mission in missions)
                 {
                     string source_name = Path.GetFileName(mission.Source);
-                    MissionRunner runner = new(mission, ctx.AddTask(source_name));
-                    runner.Run();
+                    using MissionRunner runner = new(mission, ctx.AddTask(source_name));
+                    runner.Start().Wait();
                     total_task.Increment(1);
                 }
                 while (!ctx.IsFinished)

@@ -52,7 +52,7 @@ public class ExtensionWhiteListChecker : IPathChecker
     private HashSet<string> _extensions;
     public ExtensionWhiteListChecker(IEnumerable<string> exts)
     {
-        _extensions = new HashSet<string>(exts);
+        _extensions = [.. exts];
     }
     public ExtensionWhiteListChecker Add(string extension)
     {
@@ -61,7 +61,7 @@ public class ExtensionWhiteListChecker : IPathChecker
     }
     public bool Check(string path)
     {
-        return _extensions.Contains(Path.GetExtension(path));
+        return _extensions.Contains(Path.GetExtension(path).ToLower());
     }
 }
 

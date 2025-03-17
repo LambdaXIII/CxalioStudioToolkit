@@ -15,6 +15,8 @@ public struct CodingStatus
     public FileSize? CurrentBitrate;
     public double? CurrentSpeed;
 
+    public string? StatusLine;
+
 
     private const string FramePattern = @"frame=\s*(\d+)";
     private const string FpsPattern = @"fps=\s*([\d.]+)";
@@ -27,6 +29,8 @@ public struct CodingStatus
     public static CodingStatus FromStatusLine(string line)
     {
         CodingStatus result = new();
+
+        result.StatusLine = line;
 
         var frameMatch = Regex.Match(line, FramePattern);
         if (frameMatch.Success)
