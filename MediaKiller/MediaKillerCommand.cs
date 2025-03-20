@@ -122,8 +122,11 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                 {
                     string source_name = Path.GetFileName(mission.Source);
                     using MissionRunner runner = new(mission, ctx.AddTask(source_name));
-                    runner.Start().Wait();
-                    total_task.Increment(1);
+                    bool result = runner.Start();
+                    if (result)
+                        total_task.Increment(1);
+
+                    if (XEnv.Instance.WannaQuit) break;
                 }
                 while (!ctx.IsFinished)
                 {

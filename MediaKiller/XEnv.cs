@@ -26,6 +26,8 @@ internal sealed class XEnv
     public static readonly string AppVersion = "0.1.0";
     public static readonly CxConfigManager ConfigManaer = new(AppName, AppVersion);
 
+    public CancellationTokenSource CancellationTokenSource = new();
+
 
     public static void Err(string message)
     {
@@ -62,6 +64,7 @@ internal sealed class XEnv
     {
         AnsiConsole.MarkupLine("[red]用户取消了操作。[/]");
         WannaQuit = true;
+        CancellationTokenSource.Cancel();
     }
 
     public static void DebugMsg(string? msg)

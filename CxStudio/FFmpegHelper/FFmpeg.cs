@@ -10,16 +10,17 @@ public class FFmpeg
     public readonly string FFmpegBin;
     public readonly string FFmpegArguments;
     private DateTime _startTime;
-    private CancellationTokenSource _cancelToken;
 
     public event CodingStatusEventHandler? CodingStatusChanged;
+
+    private CancellationTokenSource _cancellation;
 
     public FFmpeg(string ffmpeg_bin = "ffmpeg", string args = "")
     {
         FFmpegBin = ffmpeg_bin;
         FFmpegArguments = args;
         _startTime = DateTime.Now;
-        _cancelToken = new();
+        _cancellation = new();
     }
 
     private ProcessStartInfo GetProcessStartInfo()
@@ -50,9 +51,14 @@ public class FFmpeg
         CodingStatusChanged?.Invoke(this, (CodingStatus)status);
     }
 
-    public Task Run()
+    public void Cancel()
     {
-        var process = new Process
+        _cancellation.Cancel();
+    }
+
+    public bool Run()
+    {
+        using var process = new Process
         {
             StartInfo = GetProcessStartInfo(),
             EnableRaisingEvents = true
@@ -66,11 +72,23 @@ public class FFmpeg
         process.BeginErrorReadLine();
         process.BeginOutputReadLine();
 
-        return process.WaitForExitAsync(_cancelToken.Token);
-    }
+        while (!process.HasExited)
+        {
+            if (_cancellation.Token.IsCancellationRequested)
+            {
+                //process.StandardInput.Write("q");
+                //process.WaitForExit();
+                process.Kill();
+                Thread.Sleep(500);
+                break;
+            }
+            Thread.Sleep(100);
+        }
 
-    public void Cancel()
-    {
-        _cancelToken.Cancel();
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+            return false;
+        return true;
     }
 }

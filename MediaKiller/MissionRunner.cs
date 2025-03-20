@@ -9,11 +9,13 @@ class MissionRunner : IDisposable
     private ProgressTask? _pTask;
     private Time SourceDuration = new(1.0);
     private bool disposedValue;
+    private bool _isWellDone = false;
 
     public MissionRunner(Mission mission, ProgressTask? task = null)
     {
         Mission = mission;
         _pTask = task;
+        _pTask?.IsIndeterminate(true);
         XEnv.DebugMsg($"Init MissionRunner: {Mission.Source}");
     }
 
@@ -31,7 +33,7 @@ class MissionRunner : IDisposable
             return;
         }
 
-        _pTask.Value(status.CurrentTime?.ToSeconds() ?? -1);
+        _pTask?.Value(status.CurrentTime?.ToSeconds() ?? -1);
     }
 
     private Time GetDuration(string source)
@@ -51,11 +53,15 @@ class MissionRunner : IDisposable
         return dur ?? new Time(-1.0);
     }
 
-    public Task Start()
+    public bool Start()
     {
         XEnv.DebugMsg($"Start MissionRunner: {Mission.Source}");
         SourceDuration = GetDuration(Mission.Source);
         _pTask?.MaxValue(SourceDuration.ToSeconds());
+
+
+        _pTask?.StartTask();
+        _pTask?.IsIndeterminate(false);
 
         foreach (var oGroup in Mission.Outputs)
         {
@@ -66,7 +72,30 @@ class MissionRunner : IDisposable
         var ffmpeg = new FFmpeg(Mission.FFmpegPath, Mission.CommandArgument);
         ffmpeg.CodingStatusChanged += UpdateProgress;
 
-        return ffmpeg.Run();
+        using var task = Task.Run(() => ffmpeg.Run());
+        while (!task.IsCompleted)
+        {
+            if (XEnv.Instance.WannaQuit)
+            {
+                ffmpeg.Cancel();
+                return false;
+            }
+            Thread.Sleep(100);
+        }
+
+        _isWellDone = task.Result;
+        return task.Result;
+    }
+
+    public void CleanUpTargets()
+    {
+        foreach (var oGroup in Mission.Outputs)
+        {
+            var name = oGroup.FileName;
+            XEnv.DebugMsg($"Cleaning up {name}");
+            if (File.Exists(name))
+                File.Delete(name);
+        }
     }
 
     protected virtual void Dispose(bool disposing)
@@ -75,9 +104,11 @@ class MissionRunner : IDisposable
         {
             if (disposing)
             {
-                _pTask?.Value(1);
+                _pTask?.Value(SourceDuration.ToSeconds());
                 _pTask?.StopTask();
                 XEnv.DebugMsg($"Dispose MissionRunner: {Mission.Source}");
+                if (!_isWellDone)
+                    CleanUpTargets();
             }
 
             // TODO: 释放未托管的资源(未托管的对象)并重写终结器
