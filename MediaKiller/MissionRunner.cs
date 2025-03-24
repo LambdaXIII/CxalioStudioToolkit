@@ -8,6 +8,8 @@ class MissionRunner : IDisposable
     public readonly Mission Mission;
     private ProgressTask? _pTask;
     public Time SourceDuration { get; init; }
+    public Time CurrentMediaTime { get; private set; } = new Time();
+
     private bool disposedValue;
 
     public MissionRunner(Mission mission, ProgressTask? task = null)
@@ -38,8 +40,11 @@ class MissionRunner : IDisposable
         else
             _pTask.Description($"[cyan]{Mission.Name}[/]");
 
+
+        Time currentTime = status.CurrentTime ?? CurrentMediaTime;
         _pTask?.IsIndeterminate(false);
-        _pTask?.Value(status.CurrentTime?.ToSeconds() ?? -1);
+        _pTask?.Value(currentTime.ToSeconds());
+        CurrentMediaTime = currentTime;
     }
 
     public bool Run()
