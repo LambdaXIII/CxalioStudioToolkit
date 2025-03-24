@@ -9,7 +9,6 @@ class MissionRunner : IDisposable
     private ProgressTask? _pTask;
     private Time SourceDuration = new(1.0);
     private bool disposedValue;
-    private bool _isWellDone = false;
 
     public MissionRunner(Mission mission, ProgressTask? task = null)
     {
@@ -53,7 +52,7 @@ class MissionRunner : IDisposable
         return dur ?? new Time(-1.0);
     }
 
-    public bool Start()
+    public bool Run()
     {
         XEnv.DebugMsg($"Start MissionRunner: {Mission.Source}");
         SourceDuration = GetDuration(Mission.Source);
@@ -79,7 +78,12 @@ class MissionRunner : IDisposable
             Thread.Sleep(100);
         }
 
-        _isWellDone = task.Result;
+        task.Wait();
+
+        if (!task.Result)
+            CleanUpTargets();
+
+        //_pTask?.StopTask();
         return task.Result;
     }
 
@@ -102,15 +106,13 @@ class MissionRunner : IDisposable
         {
             if (disposing)
             {
-                _pTask?.Value(SourceDuration.ToSeconds());
+                // TODO: 释放托管状态(托管对象)
                 _pTask?.StopTask();
-                XEnv.DebugMsg($"任务{Mission.Name}未完成");
-                if (!_isWellDone)
-                    CleanUpTargets();
             }
 
             // TODO: 释放未托管的资源(未托管的对象)并重写终结器
             // TODO: 将大型字段设置为 null
+            _pTask = null;
             disposedValue = true;
         }
     }

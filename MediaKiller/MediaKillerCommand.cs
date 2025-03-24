@@ -114,6 +114,14 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
     private void Transcode(IEnumerable<Mission> missions)
     {
         AnsiConsole.Progress()
+            .HideCompleted(true)
+            .Columns(new ProgressColumn[] {
+                new TaskDescriptionColumn(),
+                new SpinnerColumn(Spinner.Known.Circle),
+                new ProgressBarColumn(),
+                new PercentageColumn(),
+                new RemainingTimeColumn(),
+            })
             .Start(ctx =>
             {
                 var total_task = ctx.AddTask("Transcoding");
@@ -121,12 +129,21 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                 foreach (Mission mission in missions)
                 {
                     string source_name = Path.GetFileName(mission.Source);
-                    using MissionRunner runner = new(mission, ctx.AddTask(source_name));
-                    bool result = runner.Start();
-                    if (result)
-                        total_task.Increment(1);
+                    using MissionRunner runner = new(mission, ctx.AddTaskBefore(source_name, total_task));
+                    bool result = runner.Run();
 
-                    if (XEnv.Instance.WannaQuit) break;
+                    if (result)
+                        AnsiConsole.MarkupLine("任务[cyan]{0}[/]完成", mission.Name);
+                    else
+                        AnsiConsole.MarkupLine("任务[cyan]{0}[/][red]中止！[/]", mission.Name);
+
+                    total_task.Increment(1);
+
+                    if (XEnv.Instance.WannaQuit)
+                    {
+                        AnsiConsole.MarkupLine("[red]正在取消后续计划…[/]");
+                        break;
+                    }
                 }
                 while (!ctx.IsFinished)
                 {

@@ -70,7 +70,12 @@ internal sealed class XEnv
     public static void DebugMsg(string? msg)
     {
         if (Instance.Debug && msg is not null)
-            AnsiConsole.MarkupLine("[grey]{0}[/]", msg);
+        {
+            AnsiConsole.MarkupLine(
+                "[grey]{0}[/]",
+                msg.Replace("[", "[[").Replace("]", "]]")
+                );
+        }
     }
 }
 
