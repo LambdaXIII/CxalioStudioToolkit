@@ -92,25 +92,28 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         AnsiConsole.MarkupLine("为 [yellow]{0}[/] 个预设生成 [yellow]{1}[/] 个任务。", XEnv.Instance.Presets.Count, missions.Count);
 
         if (XEnv.Instance.ScriptOutput is not null)
-        {
-            AnsiConsole.MarkupLine("生成目标脚本 [cyan]{0}[/] ...", Path.GetFileName(XEnv.Instance.ScriptOutput));
-
-            using StreamWriter writer = new(XEnv.Instance.ScriptOutput);
-            ScriptMaker script_maker = new(missions);
-            foreach (var line in script_maker.Lines())
-            {
-                writer.WriteLine(line);
-                if (XEnv.Instance.Debug)
-                    AnsiConsole.MarkupLine("[grey]{0}[/]", line);
-            }
-
-            AnsiConsole.MarkupLine("[cyan]脚本生成完毕。[cyan]");
-        }
+            ExportScript(XEnv.Instance.ScriptOutput, missions);
 
         Transcode(missions);
 
         return 0;
     } // Execute
+
+    private void ExportScript(string target, IEnumerable<Mission> missions)
+    {
+        AnsiConsole.MarkupLine("生成目标脚本 [cyan]{0}[/] ...", Path.GetFileName(target));
+
+        using StreamWriter writer = new(target);
+        ScriptMaker script_maker = new(missions);
+        foreach (var line in script_maker.Lines())
+        {
+            writer.WriteLine(line);
+            if (XEnv.Instance.Debug)
+                AnsiConsole.MarkupLine("[grey]{0}[/]", line);
+        }
+
+        AnsiConsole.MarkupLine("[cyan]脚本生成完毕。[cyan]");
+    }
 
     private void Transcode(IEnumerable<Mission> missions)
     {
