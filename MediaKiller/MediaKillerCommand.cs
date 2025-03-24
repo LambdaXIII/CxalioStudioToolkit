@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using CxStudio.TUI;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -124,20 +125,26 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             })
             .Start(ctx =>
             {
-                var total_task = ctx.AddTask("Transcoding");
-                total_task.MaxValue(missions.Count());
+                var total_task = ctx.AddTask("正在开始……")
+                .MaxValue(missions.Count());
+
+                JobCounter jobCounter = new((uint)missions.Count());
                 foreach (Mission mission in missions)
                 {
                     string source_name = Path.GetFileName(mission.Source);
-                    using MissionRunner runner = new(mission, ctx.AddTaskBefore(source_name, total_task));
+                    using MissionRunner runner = new(mission, ctx.AddTaskBefore("初始化…", total_task));
+
+                    total_task.Description($"[yellow][[{jobCounter.Format()}]][/] 正在转码");
+
                     bool result = runner.Run();
 
                     if (result)
-                        AnsiConsole.MarkupLine("任务[cyan]{0}[/]完成", mission.Name);
+                        AnsiConsole.MarkupLine("[yellow][[{1}]][/] 任务[cyan]{0}[/]完成", mission.Name, jobCounter.Format());
                     else
-                        AnsiConsole.MarkupLine("任务[cyan]{0}[/][red]中止！[/]", mission.Name);
+                        AnsiConsole.MarkupLine("[yellow][[{1}]][/] 任务[cyan]{0}[/][red]中止！[/]", mission.Name, jobCounter.Format());
 
                     total_task.Increment(1);
+                    jobCounter.Increase(1);
 
                     if (XEnv.Instance.WannaQuit)
                     {

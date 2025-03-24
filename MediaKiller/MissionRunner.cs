@@ -31,6 +31,12 @@ class MissionRunner : IDisposable
             _pTask?.IsIndeterminate(true);
             return;
         }
+
+        if (status.CurrentSpeed > 0)
+            _pTask.Description($"[cyan]{Mission.Name}[/][grey] [[{status.CurrentSpeed:F2}x]][/]");
+        else
+            _pTask.Description($"[cyan]{Mission.Name}[/]");
+
         _pTask?.IsIndeterminate(false);
         _pTask?.Value(status.CurrentTime?.ToSeconds() ?? -1);
     }
@@ -54,12 +60,12 @@ class MissionRunner : IDisposable
 
     public bool Run()
     {
-        XEnv.DebugMsg($"Start MissionRunner: {Mission.Source}");
+        XEnv.DebugMsg($"开始执行任务: {Mission.Source}");
         SourceDuration = GetDuration(Mission.Source);
-        _pTask?.MaxValue(SourceDuration.ToSeconds());
 
-
-        _pTask?.StartTask();
+        _pTask?.MaxValue(SourceDuration.ToSeconds())
+            .Description($"[cyan]{Mission.Name}[/]")
+            .StartTask();
 
         foreach (var oGroup in Mission.Outputs)
         {
