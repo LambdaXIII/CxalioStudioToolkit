@@ -43,6 +43,26 @@ public class CommandFinder
         return this;
     }
 
+    private static string? CheckDir(string dir, string cmd)
+    {
+        List<string> cmds = [cmd];
+
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            cmds.Add(cmd + ".exe");
+            cmds.Add(cmd + ".cmd");
+        }
+
+        foreach (var target in cmds)
+        {
+            string full_path = Path.Combine(dir, target);
+            if (File.Exists(full_path))
+                return full_path;
+        }
+
+        return null;
+    }
+
     public string? Find(string cmd)
     {
         if (Path.IsPathFullyQualified(cmd))
@@ -50,20 +70,17 @@ public class CommandFinder
 
         foreach (string search_path in SearchPaths)
         {
-            string? full_path = Path.Combine(search_path, cmd);
-            if (File.Exists(full_path))
-            {
+            string? full_path = CheckDir(search_path, cmd);
+            if (full_path is not null)
                 return full_path;
-            }
+
             if (SubDirectorySearchEnabled)
             {
                 foreach (string sub_dir in Directory.GetDirectories(search_path))
                 {
-                    full_path = Path.Combine(sub_dir, cmd);
-                    if (File.Exists(full_path))
-                    {
+                    full_path = CheckDir(sub_dir, cmd);
+                    if (full_path is not null)
                         return full_path;
-                    }
                 }
             }
         }

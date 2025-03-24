@@ -7,15 +7,16 @@ class MissionRunner : IDisposable
 {
     public readonly Mission Mission;
     private ProgressTask? _pTask;
-    private Time SourceDuration = new(1.0);
+    public Time SourceDuration { get; init; }
     private bool disposedValue;
 
     public MissionRunner(Mission mission, ProgressTask? task = null)
     {
         Mission = mission;
+        SourceDuration = mission.Duration ?? new(-1.0);
         _pTask = task;
         _pTask?.IsIndeterminate(true);
-        XEnv.DebugMsg($"Init MissionRunner: {Mission.Source}");
+        XEnv.DebugMsg($"初始化 MissionRunner: {Mission.Source}");
     }
 
 
@@ -41,27 +42,9 @@ class MissionRunner : IDisposable
         _pTask?.Value(status.CurrentTime?.ToSeconds() ?? -1);
     }
 
-    private Time GetDuration(string source)
-    {
-        Time? dur = MediaDatabase.Instance.GetDuration(source);
-        if (dur is null)
-        {
-            XEnv.DebugMsg($"Getting duration of {source} from FFprobe");
-
-            var ffprobe = new FFprobe(Mission.Preset.FFprobePath);
-            ffprobe.GetFormatInfo(source);
-            dur = ffprobe.GetFormatInfo(source)?.Duration;
-            if (dur is not null)
-                MediaDatabase.Instance.SetDuration(source, (Time)dur);
-        }
-        XEnv.DebugMsg($"Duration of {source}: {dur?.ToSeconds()}s");
-        return dur ?? new Time(-1.0);
-    }
-
     public bool Run()
     {
         XEnv.DebugMsg($"开始执行任务: {Mission.Source}");
-        SourceDuration = GetDuration(Mission.Source);
 
         _pTask?.MaxValue(SourceDuration.ToSeconds())
             .Description($"[cyan]{Mission.Name}[/]")

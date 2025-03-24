@@ -1,4 +1,5 @@
-﻿using CxStudio.CxConfig;
+﻿using CxStudio;
+using CxStudio.CxConfig;
 using Spectre.Console;
 
 namespace MediaKiller;
@@ -77,5 +78,24 @@ internal sealed class XEnv
                 );
         }
     }
+
+    public static string? GetCommandPath(string cmd)
+    {
+        var finder = new CommandFinder();
+
+        string personal = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+
+        finder.AddSearchPath(Path.Combine(personal, "Download/"))
+            .AddSearchPath(Path.Combine(personal, ".local/bin/"))
+            .AddSearchPath(Path.Combine(personal, ".bin/"))
+            .AddSearchPath(Path.Combine(personal, "bin/"))
+            .AddSearchPath(Path.Combine(personal, "Desktop/"))
+            .AddSearchPath(Path.Combine(personal, "ffmpeg/"))
+            .AddSearchPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+
+        return finder.Find(cmd);
+    }
+
+
 }
 

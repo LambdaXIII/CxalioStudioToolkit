@@ -15,11 +15,7 @@ struct Mission
 
     public readonly string Name => Path.GetFileNameWithoutExtension(Source);
 
-    //public Mission(string source, Preset preset)
-    //{
-    //    Source = source;
-    //    Preset = preset;
-    //}
+    public readonly Time? Duration => MediaDatabase.Instance.GetDuration(Source);
 
     public Mission()
     {

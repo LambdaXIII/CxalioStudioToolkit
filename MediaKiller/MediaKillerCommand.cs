@@ -126,7 +126,9 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             .Start(ctx =>
             {
                 var total_task = ctx.AddTask("正在开始……")
-                .MaxValue(missions.Count());
+                    .MaxValue(missions.Sum(mission => mission.Duration?.ToSeconds() ?? 1));
+
+                total_task.StartTask();
 
                 JobCounter jobCounter = new((uint)missions.Count());
                 foreach (Mission mission in missions)
@@ -143,7 +145,11 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                     else
                         AnsiConsole.MarkupLine("[yellow][[{1}]][/] 任务[cyan]{0}[/][red]中止！[/]", mission.Name, jobCounter.Format());
 
-                    total_task.Increment(1);
+                    double increment = runner.SourceDuration.ToSeconds();
+                    if (increment <= 1)
+                        increment = 1;
+                    total_task.Increment(increment);
+
                     jobCounter.Increase(1);
 
                     if (XEnv.Instance.WannaQuit)
@@ -157,6 +163,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
                     if (XEnv.Instance.WannaQuit)
                         break;
                 }
+
+                total_task.StopTask();
             });
     }
 
