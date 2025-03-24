@@ -34,7 +34,8 @@ public class FFmpeg
             UseShellExecute = false,
             CreateNoWindow = true,
             StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
+            StandardErrorEncoding = Encoding.UTF8,
+            RedirectStandardInput = true
         };
     }
 
@@ -76,10 +77,10 @@ public class FFmpeg
         {
             if (_cancellation.Token.IsCancellationRequested)
             {
-                //process.StandardInput.Write("q");
-                //process.WaitForExit();
-                process.Kill();
-                Thread.Sleep(500);
+                process.StandardInput.Write("q");
+                Thread.Sleep(1000);
+                if (!process.HasExited)
+                    process.Kill();
                 break;
             }
             Thread.Sleep(100);
@@ -87,8 +88,6 @@ public class FFmpeg
 
         process.WaitForExit();
 
-        if (process.ExitCode != 0)
-            return false;
-        return true;
+        return process.ExitCode == 0 && !_cancellation.IsCancellationRequested;
     }
 }

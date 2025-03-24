@@ -29,10 +29,10 @@ class MissionRunner : IDisposable
 
         if (SourceDuration.ToSeconds() < 0)
         {
-            _pTask.Value = -1;
+            _pTask?.IsIndeterminate(true);
             return;
         }
-
+        _pTask?.IsIndeterminate(false);
         _pTask?.Value(status.CurrentTime?.ToSeconds() ?? -1);
     }
 
@@ -61,7 +61,6 @@ class MissionRunner : IDisposable
 
 
         _pTask?.StartTask();
-        _pTask?.IsIndeterminate(false);
 
         foreach (var oGroup in Mission.Outputs)
         {
@@ -76,10 +75,7 @@ class MissionRunner : IDisposable
         while (!task.IsCompleted)
         {
             if (XEnv.Instance.WannaQuit)
-            {
                 ffmpeg.Cancel();
-                return false;
-            }
             Thread.Sleep(100);
         }
 
@@ -92,9 +88,11 @@ class MissionRunner : IDisposable
         foreach (var oGroup in Mission.Outputs)
         {
             var name = oGroup.FileName;
-            XEnv.DebugMsg($"Cleaning up {name}");
             if (File.Exists(name))
+            {
                 File.Delete(name);
+                AnsiConsole.MarkupLine("[red]已清除未完成的目标文件:[/] [cyan]{0}[/]", Path.GetFileName(name));
+            }
         }
     }
 
@@ -106,7 +104,7 @@ class MissionRunner : IDisposable
             {
                 _pTask?.Value(SourceDuration.ToSeconds());
                 _pTask?.StopTask();
-                XEnv.DebugMsg($"Dispose MissionRunner: {Mission.Source}");
+                XEnv.DebugMsg($"任务{Mission.Name}未完成");
                 if (!_isWellDone)
                     CleanUpTargets();
             }
