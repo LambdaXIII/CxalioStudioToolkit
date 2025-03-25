@@ -1,5 +1,4 @@
-﻿using CxStudio.TUI;
-using Spectre.Console;
+﻿using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -94,7 +93,10 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         if (XEnv.Instance.ScriptOutput is not null)
             ExportScript(XEnv.Instance.ScriptOutput, missions);
 
-        Transcode(missions);
+        //Transcode(missions);
+
+        MissionManager manager = new();
+        manager.AddMissions(missions).Run();
 
         return 0;
     } // Execute
@@ -113,62 +115,6 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
 
         AnsiConsole.MarkupLine("[cyan]脚本生成完毕。[cyan]");
-    }
-
-    private void Transcode(IEnumerable<Mission> missions)
-    {
-        AnsiConsole.Progress()
-            .HideCompleted(true)
-            .Columns(new ProgressColumn[] {
-                new TaskDescriptionColumn(),
-                new SpinnerColumn(Spinner.Known.Circle),
-                new ProgressBarColumn(),
-                new PercentageColumn(),
-                new RemainingTimeColumn(),
-            })
-            .Start(ctx =>
-            {
-                var total_task = ctx.AddTask("正在开始……")
-                    .MaxValue(missions.Sum(mission => mission.Duration?.ToSeconds() ?? 1));
-
-                total_task.StartTask();
-
-                JobCounter jobCounter = new((uint)missions.Count());
-                foreach (Mission mission in missions)
-                {
-                    string source_name = Path.GetFileName(mission.Source);
-                    using MissionRunner runner = new(mission, ctx.AddTaskBefore("初始化…", total_task));
-
-                    total_task.Description($"[yellow][[{jobCounter.Format()}]][/] 正在转码");
-
-                    bool result = runner.Run();
-
-                    if (result)
-                        AnsiConsole.MarkupLine("[yellow][[{1}]][/] 任务[cyan]{0}[/]完成", mission.Name, jobCounter.Format());
-                    else
-                        AnsiConsole.MarkupLine("[yellow][[{1}]][/] 任务[cyan]{0}[/][red]中止！[/]", mission.Name, jobCounter.Format());
-
-                    double increment = runner.SourceDuration.ToSeconds();
-                    if (increment <= 1)
-                        increment = 1;
-                    total_task.Increment(increment);
-
-                    jobCounter.Increase(1);
-
-                    if (XEnv.Instance.WannaQuit)
-                    {
-                        AnsiConsole.MarkupLine("[red]正在取消后续计划…[/]");
-                        break;
-                    }
-                }
-                while (!ctx.IsFinished)
-                {
-                    if (XEnv.Instance.WannaQuit)
-                        break;
-                }
-
-                total_task.StopTask();
-            });
     }
 
     public static void SaveSamplePreset(string path)

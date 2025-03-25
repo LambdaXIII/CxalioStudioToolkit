@@ -16,19 +16,22 @@ internal sealed class XEnv
 
     public bool Debug { get; set; } = false;
 
-    public bool WannaQuit = false;
-
 
     private static readonly Lazy<XEnv> _instance = new(() => new XEnv());
-    private XEnv() { }
+
     public static XEnv Instance => _instance.Value;
 
     public static readonly string AppName = "MediaKiller";
     public static readonly string AppVersion = "0.1.0";
     public static readonly CxConfigManager ConfigManaer = new(AppName, AppVersion);
 
-    public CancellationTokenSource CancellationTokenSource = new();
+    public CancellationTokenSource GlobalCancellation = new();
 
+
+    private XEnv()
+    {
+        Console.CancelKeyPress += HandleCancelation;
+    }
 
     public static void Err(string message)
     {
@@ -61,11 +64,11 @@ internal sealed class XEnv
         AnsiConsole.MarkupLine("发现 [yellow]{0}[/] 个来源路径。", Instance.Sources.Count);
     }
 
-    public void HandleCancelation()
+    public void HandleCancelation(object? _, ConsoleCancelEventArgs e)
     {
-        AnsiConsole.MarkupLine("[red]用户取消了操作。[/]");
-        WannaQuit = true;
-        CancellationTokenSource.Cancel();
+        AnsiConsole.MarkupLine("接收到 [red]取消[/] 信号，正在处理……");
+        GlobalCancellation.Cancel();
+        e.Cancel = true;
     }
 
     public static void DebugMsg(string? msg)

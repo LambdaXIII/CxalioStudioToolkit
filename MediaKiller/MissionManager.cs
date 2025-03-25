@@ -72,6 +72,7 @@ internal sealed class MissionManager
 
         progress.Start(ctx =>
         {
+            double completedTime = 0;
 
             var totalTask = ctx.AddTask("总体进度").MaxValue(totalSeconds);
             totalTask.StartTask();
@@ -106,15 +107,61 @@ internal sealed class MissionManager
                 ffmpeg.CodingStatusChanged += (sender, status) =>
                 {
                     currentTime = status.CurrentTime?.ToSeconds() ?? currentTime;
-                    currentTask.Increment(currentTime);
-                    totalTask.Increment(currentTime);
+                    currentTask.Value(currentTime);
+                    totalTask.Value(completedTime + currentTime);
                 };
-                //TODO
 
+                Task<bool> transcodingTask = Task.Run(() => { return ffmpeg.Run(); });
+                while (!transcodingTask.IsCompleted)
+                {
+                    Thread.Sleep(100);
+                    if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                    {
+                        ffmpeg.Cancel();
+                        break;
+                    }
+                }
+
+                transcodingTask.Wait();
+                bool result = transcodingTask.Result;
+                if (result)
+                {
+                    AnsiConsole.MarkupLine("{0} [green]已完成[/]", missionName);
+
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("{0} [red]失败[/]", missionName);
+                    currentTask.IsIndeterminate(true);
+                    foreach (var oGroup in currentMission.Outputs)
+                    {
+                        var name = oGroup.FileName;
+                        if (File.Exists(name))
+                        {
+                            File.Delete(name);
+                            AnsiConsole.MarkupLine("[red]已清除未完成的目标文件:[/] [cyan]{0}[/]", Path.GetFileName(name));
+                        }
+                    }
+                }
+                currentTask.StopTask();
+                completedTime += currentDuration ?? 1;
+
+                if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                {
+                    AnsiConsole.MarkupLine("[red]正在取消后续计划…[/]");
+                    break;
+                }
+
+                Thread.Sleep(100);
+            } //for
+
+            XEnv.DebugMsg("等待全部任务结束……");
+            while (!ctx.IsFinished)
+            {
+                Thread.Sleep(100);
+                if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                    break;
             }
-
-
-
-        });
-    }
+        }); // process.start
+    }//Run
 }
