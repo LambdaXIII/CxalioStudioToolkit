@@ -53,7 +53,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         XEnv.Instance.NoOverwrite = settings.NoOverwrite;
         if (XEnv.Instance.NoOverwrite) AnsiConsole.MarkupLine("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
 
-        XEnv.DebugMsg("MediaKiller started.  :)");
+        XEnv.Whisper("MediaKiller started.  :)");
 
         if (settings.GenerateProfile)
         {
@@ -91,14 +91,14 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         List<Mission> missions = [];
         foreach (Preset p in XEnv.Instance.Presets)
         {
-            XEnv.DebugMsg($"Expanding sources for preset {p.Name}");
+            XEnv.Whisper($"Expanding sources for preset {p.Name}");
 
             SourceExpander expander = new(p);
             MissionMaker maker = new(p);
             foreach (string source in expander.Expand(XEnv.Instance.Sources))
             {
                 missions.Add(maker.Make(source));
-                XEnv.DebugMsg($"Mission added: {source}");
+                XEnv.Whisper($"Mission added: {source}");
             }
         }
 

@@ -52,7 +52,7 @@ internal sealed class MissionManager
             if (folder is null)
                 continue;
             Directory.CreateDirectory(folder);
-            XEnv.DebugMsg($"新建目标文件夹： {folder}");
+            XEnv.Whisper($"新建目标文件夹： {folder}");
         }
     }
 

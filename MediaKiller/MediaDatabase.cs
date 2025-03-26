@@ -6,6 +6,7 @@ namespace MediaKiller;
 
 internal sealed class MediaDatabase
 {
+    private XEnv.Talker Talker { get; init; } = new("MediaDB");
     private static readonly Lazy<MediaDatabase> _instance = new(() => new MediaDatabase());
     public static MediaDatabase Instance => _instance.Value;
 
@@ -47,7 +48,7 @@ internal sealed class MediaDatabase
 
     private MediaDatabase()
     {
-        XEnv.DebugMsg("正在初始化媒体信息库……");
+        Talker.Whisper("正在初始化媒体信息库……");
         string table = XEnv.ConfigManaer.GetCacheFile("mediainfo.csv");
         if (File.Exists(table))
         {
@@ -60,11 +61,13 @@ internal sealed class MediaDatabase
             }
         }
 
+        Talker.Whisper($"已加载 {records.Count} 条记录。");
+
         FFprobeBin = XEnv.GetCommandPath("ffprobe");
         if (FFprobeBin is null)
-            XEnv.DebugMsg("未在系统范围内找到 ffprobe 程序。");
+            Talker.Whisper("未在系统范围内找到 ffprobe 程序。");
         else
-            XEnv.DebugMsg($"找到 FFprobe 位于：{FFprobeBin}");
+            Talker.Whisper($"找到 FFprobe 位于：{FFprobeBin}");
     }
 
     ~MediaDatabase()
@@ -78,6 +81,7 @@ internal sealed class MediaDatabase
                 continue;
             writer.WriteLine(r.Value.Compile());
         }
+        Talker.Whisper($"已保存 {records.Count} 条记录。");
     }
 
     public Time? GetDuration(string path)
@@ -88,7 +92,7 @@ internal sealed class MediaDatabase
             if (FFprobeBin is null)
                 return null;
 
-            XEnv.DebugMsg($"尝试使用 ffprobe 获取 {path} 的时长……");
+            Talker.Whisper($"尝试使用 ffprobe 获取 {path} 的时长……");
             FFprobe prober = new(FFprobeBin);
             var duration = prober.GetFormatInfo(path)?.Duration;
             if (duration is null)

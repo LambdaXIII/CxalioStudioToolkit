@@ -24,13 +24,13 @@ class MissionRunner
     public event EventHandler? Finished;
     public event EventHandler? ProgressUpdated;
 
-    private Talker Talker { get; init; }
+    private XEnv.Talker Talker { get; init; }
 
     public MissionRunner(ref Mission mission, ref JobCounter jobCounter)
     {
         Mission = mission;
         JobCounter = jobCounter;
-        Talker = new Talker(Name);
+        Talker = new(Name);
     }
 
     public void Cancel()

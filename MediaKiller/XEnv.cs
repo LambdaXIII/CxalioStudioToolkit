@@ -30,6 +30,7 @@ internal sealed class XEnv
 
     public CancellationTokenSource GlobalCancellation = new();
 
+    private Talker _talker { get; init; } = new("XEnv");
 
     private XEnv()
     {
@@ -69,16 +70,7 @@ internal sealed class XEnv
         e.Cancel = true;
     }
 
-    public static void DebugMsg(string? msg)
-    {
-        if (Instance.Debug && msg is not null)
-        {
-            AnsiConsole.MarkupLine(
-                "[grey]{0}[/]",
-                msg.Replace("[", "[[").Replace("]", "]]")
-                );
-        }
-    }
+
 
     public static string? GetCommandPath(string cmd)
     {
@@ -97,6 +89,19 @@ internal sealed class XEnv
         return finder.Find(cmd);
     }
 
+    public static void Whisper(string? msg)
+    {
+        if (string.IsNullOrEmpty(msg)) return;
+        WhisperHandler(XEnv.Instance._talker, msg);
+    }
+
+    public static void Say(string? msg)
+    {
+        if (string.IsNullOrEmpty(msg)) return;
+        SayHandler(XEnv.Instance._talker, msg);
+    }
+
+
     private static void SayHandler(Talker sender, string message)
     {
         AnsiConsole.MarkupLine(message.Replace("[", "[[").Replace("]", "]]"));
@@ -109,7 +114,7 @@ internal sealed class XEnv
     }
 
     delegate void TalkHandler(Talker sender, string message);
-    class Talker
+    public class Talker
     {
         public string Name;
         public event TalkHandler? WannaSay;

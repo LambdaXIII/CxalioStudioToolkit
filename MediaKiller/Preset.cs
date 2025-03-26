@@ -114,7 +114,7 @@ internal sealed class Preset
                 }
                 break;
         }
-        XEnv.DebugMsg($"Acceptable suffixes: {string.Join(" ", AcceptableSuffixes)}");
+        XEnv.Whisper($"Acceptable suffixes: {string.Join(" ", AcceptableSuffixes)}");
     }
 
     private void LoadTargetTable(ref TomlTable profile)
@@ -169,7 +169,7 @@ internal sealed class Preset
 
     public static Preset Load(string path)
     {
-        XEnv.DebugMsg($"Loading preset: {path}");
+        XEnv.Whisper($"Loading preset: {path}");
         Preset result = new()
         {
             PresetPath = path
