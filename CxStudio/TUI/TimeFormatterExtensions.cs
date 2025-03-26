@@ -29,6 +29,6 @@ public static class TimeFormatterExtensions
 
     public static string ToFormattedString(this Time time)
     {
-        return TimeSpan.FromMilliseconds(time.ToMilliseconds()).ToFormattedString();
+        return TimeSpan.FromMilliseconds(time.TotalMilliseconds).ToFormattedString();
     }
 }

@@ -48,8 +48,8 @@ public class FFprobe
                 StreamCount = formatNode["nb_streams"]!.GetValue<uint>(),
                 FormatName = formatNode["format_name"]!.GetValue<string>()!,
                 FormatLongName = formatNode["format_long_name"]!.GetValue<string>()!,
-                StartTime = new Time(double.Parse(formatNode["start_time"]!.GetValue<string>()!)),
-                Duration = new Time(double.Parse(formatNode["duration"]!.GetValue<string>()!)),
+                StartTime = Time.FromSeconds(double.Parse(formatNode["start_time"]!.GetValue<string>()!)),
+                Duration = Time.FromSeconds(double.Parse(formatNode["duration"]!.GetValue<string>()!)),
                 Size = FileSize.FromBytes(ulong.Parse(formatNode["size"]!.GetValue<string>()!)),
                 Bitrate = FileSize.FromString(formatNode["bit_rate"]!.GetValue<string>()!),
                 Tags = tags ?? []

@@ -4,7 +4,6 @@
     {
         public readonly ushort framerate = fps;
         public readonly bool dropframe = df;
-        public int MillisecondsPerFrame { get { return 1000 / framerate; } }
 
 
         public static bool operator ==(Timebase left, Timebase right) => left.framerate == right.framerate && left.dropframe == right.dropframe;
