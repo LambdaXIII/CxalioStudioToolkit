@@ -82,9 +82,13 @@ internal sealed class MissionManager
             {
                 jobCounter.Value = (uint)i + 1;
                 Mission currentMission = Missions[i];
+
+                totalTask.Description($"总体进度 [grey][[{jobCounter.Format()}]][/]");
+
                 double? currentDuration = currentMission.Duration?.TotalSeconds;
 
-                string missionName = $"[grey][[{jobCounter.Format()}]][/] [cyan]{currentMission.Name}[/]";
+                string missionName = $"[cyan]{currentMission.Name}[/]";
+
                 var currentTask = ctx.AddTaskBefore(missionName, totalTask);
                 if (currentDuration is null)
                     currentTask.IsIndeterminate(true);
@@ -109,6 +113,10 @@ internal sealed class MissionManager
                     currentTime = status.CurrentTime?.TotalSeconds ?? currentTime;
                     currentTask.Value(currentTime);
                     totalTask.Value(completedTime + currentTime);
+
+                    string desc = status.CurrentSpeed is null ? missionName : $"{missionName} [grey][[{status.CurrentSpeed.Value:F2}x]][/]";
+                    currentTask.Description(desc);
+
                 };
 
                 Task<bool> transcodingTask = Task.Run(() => { return ffmpeg.Run(); });
@@ -155,7 +163,7 @@ internal sealed class MissionManager
                 Thread.Sleep(100);
             } //for
 
-            totalTask.StopTask();
+            //totalTask.StopTask();
 
             XEnv.DebugMsg("等待全部任务结束……");
             while (!ctx.IsFinished)
