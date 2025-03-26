@@ -155,12 +155,20 @@ internal sealed class MissionManager
                 Thread.Sleep(100);
             } //for
 
+            totalTask.StopTask();
+
             XEnv.DebugMsg("等待全部任务结束……");
             while (!ctx.IsFinished)
             {
                 Thread.Sleep(100);
                 if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                     break;
+            }
+
+            if (totalTask.StartTime is not null && totalTask.StopTime is not null)
+            {
+                var timeRange = totalTask.StopTime - totalTask.StartTime;
+                AnsiConsole.MarkupLine("转码结束，总计耗时[yellow]{0}[/]", timeRange.Value.ToFormattedString());
             }
         }); // process.start
     }//Run
