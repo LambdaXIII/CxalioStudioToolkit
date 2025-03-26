@@ -39,8 +39,8 @@ internal sealed class MissionManager
 
     public Time GetTotalDuration()
     {
-        double durationSeconds = Missions.Sum(mission => mission.Duration?.ToSeconds() ?? 1);
-        return new(durationSeconds);
+        double durationSeconds = Missions.Sum(mission => mission.Duration?.TotalSeconds ?? 1);
+        return Time.FromSeconds(durationSeconds);
     }
 
     public static void CreateTargetFolder(Mission mission)
@@ -57,7 +57,7 @@ internal sealed class MissionManager
 
     public void Run()
     {
-        double totalSeconds = GetTotalDuration().ToSeconds();
+        double totalSeconds = GetTotalDuration().TotalSeconds;
         int missionCount = Missions.Count();
         JobCounter jobCounter = new((uint)missionCount);
         var progress = AnsiConsole.Progress()
@@ -82,7 +82,7 @@ internal sealed class MissionManager
             {
                 jobCounter.Value = (uint)i + 1;
                 Mission currentMission = Missions[i];
-                double? currentDuration = currentMission.Duration?.ToSeconds();
+                double? currentDuration = currentMission.Duration?.TotalSeconds;
 
                 string missionName = $"[grey][[{jobCounter.Format()}]][/] [cyan]{currentMission.Name}[/]";
                 var currentTask = ctx.AddTaskBefore(missionName, totalTask);
@@ -106,7 +106,7 @@ internal sealed class MissionManager
                 double currentTime = 0;
                 ffmpeg.CodingStatusChanged += (sender, status) =>
                 {
-                    currentTime = status.CurrentTime?.ToSeconds() ?? currentTime;
+                    currentTime = status.CurrentTime?.TotalSeconds ?? currentTime;
                     currentTask.Value(currentTime);
                     totalTask.Value(completedTime + currentTime);
                 };

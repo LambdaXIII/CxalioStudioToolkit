@@ -20,7 +20,7 @@ internal sealed class MediaDatabase
 
         public string Compile()
         {
-            return $"{HashCode},{Duration.ToMilliseconds()},{Created},{LastUsed}";
+            return $"{HashCode},{Duration.TotalMilliseconds},{Created},{LastUsed}";
         }
 
         public static Record FromFields(IEnumerable<string> fields)
