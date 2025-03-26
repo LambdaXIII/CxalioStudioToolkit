@@ -40,20 +40,45 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         [Description("Enable debug mode.")]
         [CommandOption("-d|--debug")]
         [DefaultValue(false)]
-        public bool Debug { get; init; }
+        public bool Debug { get; set; }
     }
+
+    private readonly XEnv.Talker Talker = new("MainLoop");
 
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
+        int exitCode = 0;
+
         XEnv.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
         XEnv.Instance.Debug = settings.Debug;
         XEnv.Instance.ForceOverwrite = settings.ForceOverwrite;
-        if (XEnv.Instance.ForceOverwrite) AnsiConsole.MarkupLine("已启用[red]强制覆写[/]模式，将忽略预设文件中的相关设置。");
+        if (XEnv.Instance.ForceOverwrite) Talker.Say("已启用[red]强制覆写[/]模式，将忽略预设文件中的相关设置。");
         XEnv.Instance.NoOverwrite = settings.NoOverwrite;
-        if (XEnv.Instance.NoOverwrite) AnsiConsole.MarkupLine("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
+        if (XEnv.Instance.NoOverwrite) Talker.Say("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
 
-        XEnv.Whisper("MediaKiller started.  :)");
+        try
+        {
+            exitCode = MainProcess(ref settings);
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.WriteException(ex);
+            exitCode = 1;
+        }
+        finally
+        {
+            MediaDatabase.Instance.SaveCaches();
+            if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                Talker.Say("[grey]任务[red]并未未全部完成[/]，下次使用[yellow]同样的参数[/]并[yellow]添加 -n 选项[/]，即可[green]跳过已完成的任务[/]。[/]");
+        }
+        return exitCode;
+    } // Execute
+
+    private int MainProcess(ref Settings settings)
+    {
+        XEnv.ShowBanner();
+        Talker.Whisper("MediaKiller started.  :)");
 
         if (settings.GenerateProfile)
         {
@@ -84,55 +109,46 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             }
         }
 
-        XEnv.ReportPresets();
-        XEnv.ReportSources();
-
-
-        List<Mission> missions = [];
-        foreach (Preset p in XEnv.Instance.Presets)
-        {
-            XEnv.Whisper($"Expanding sources for preset {p.Name}");
-
-            SourceExpander expander = new(p);
-            MissionMaker maker = new(p);
-            foreach (string source in expander.Expand(XEnv.Instance.Sources))
-            {
-                missions.Add(maker.Make(source));
-                XEnv.Whisper($"Mission added: {source}");
-            }
-        }
-
-        AnsiConsole.MarkupLine("为 [yellow]{0}[/] 个预设生成 [yellow]{1}[/] 个任务。", XEnv.Instance.Presets.Count, missions.Count);
-
-        if (XEnv.Instance.ScriptOutput is not null)
-            ExportScript(XEnv.Instance.ScriptOutput, missions);
-
-        //Transcode(missions);
+        XEnv.ShowPresetsReport();
+        XEnv.ShowSourcesReport();
 
         MissionManager manager = new();
-        manager.AddMissions(missions);
-        manager.Run();
+        manager.AddMissions(XEnv.Instance.Presets, XEnv.Instance.Sources);
 
+        if (XEnv.Instance.Presets.Count > 1)
+            Talker.Say(
+                "为 [yellow]{0}[/] 个预设生成共计 [yellow]{1}[/] 个任务。",
+                XEnv.Instance.Presets.Count,
+                manager.Missions.Count
+                );
+
+        if (XEnv.Instance.ScriptOutput is not null)
+        {
+            ExportScript(XEnv.Instance.ScriptOutput, manager.Missions);
+            return 0;
+        }
+
+        manager.Run();
+        Talker.Whisper("MediaKiller finished.  :)");
         return 0;
-    } // Execute
+    }//MainProcess
 
     private void ExportScript(string target, IEnumerable<Mission> missions)
     {
-        AnsiConsole.MarkupLine("生成目标脚本 [cyan]{0}[/] ...", Path.GetFileName(target));
+        Talker.Say("生成目标脚本 [cyan]{0}[/] ...", Path.GetFileName(target));
 
         using StreamWriter writer = new(target);
         ScriptMaker script_maker = new(missions);
         foreach (var line in script_maker.Lines())
         {
+            XEnv.Whisper(line);
             writer.WriteLine(line);
-            if (XEnv.Instance.Debug)
-                AnsiConsole.MarkupLine("[grey]{0}[/]", line);
         }
 
-        AnsiConsole.MarkupLine("[cyan]脚本生成完毕。[cyan]");
+        Talker.Say("[green]脚本生成完毕。[/]");
     }
 
-    public static void SaveSamplePreset(string path)
+    public void SaveSamplePreset(string path)
     {
         if (path == string.Empty)
         {
@@ -145,7 +161,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             path += ".toml";
         }
 
-        AnsiConsole.MarkupLine("生成示例预设： [yellow]{0}[/]", Path.GetFileName(path));
+        Talker.Say("生成示例预设： [yellow]{0}[/]", Path.GetFileName(path));
 
         var assembly = typeof(MediaKillerCommand).Assembly;
 
@@ -165,6 +181,6 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             writer.WriteLine(reader.ReadLine());
         }
 
-        AnsiConsole.MarkupLine("生成完毕，[red]请在修改之后使用！[/]");
+        Talker.Say("生成完毕，[red]请在修改之后使用！[/]");
     }
 }

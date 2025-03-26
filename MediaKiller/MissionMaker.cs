@@ -54,16 +54,6 @@ internal sealed class MissionMaker(Preset preset)
     private readonly PresetCustomInfoProvider _presetCustomInfoProvider = new PresetCustomInfoProvider(preset);
     private readonly CountNumberProvider _countNumberProvider = new CountNumberProvider();
 
-    /*   public bool Overwrite
-       {
-           get
-           {
-               if (XEnv.Instance.NoOverwrite) return false;
-               if (XEnv.Instance.ForceOverwrite) return true;
-               return _preset.Overwrite;
-           }
-       }*/
-
     public Mission Make(string source)
     {
         source = Path.GetFullPath(source);

@@ -1,6 +1,5 @@
 ﻿using CxStudio.FFmpegHelper;
 using CxStudio.TUI;
-using Spectre.Console;
 
 namespace MediaKiller;
 
@@ -36,6 +35,7 @@ class MissionRunner
     public void Cancel()
     {
         _cts.Cancel();
+        Talker.Whisper("触发取消操作。");
     }
 
     private void HandleCodingStatus(object sender, CodingStatus status)
@@ -53,7 +53,7 @@ class MissionRunner
             if (File.Exists(file))
             {
                 File.Delete(file);
-                AnsiConsole.MarkupLine($"[red]删除未完成的目标文件：[/] [cyan]{Path.GetFileName(file)}[/]");
+                Talker.Say($"[red]删除未完成的目标文件：[/] [cyan]{Path.GetFileName(file)}[/]");
             }
         }
     }
@@ -70,33 +70,39 @@ class MissionRunner
                 if (string.IsNullOrEmpty(folderName))
                     folderName = Path.GetFileName(folder);
 
-                AnsiConsole.MarkupLine($"新建目标文件夹:[yellow]{folderName}[/]");
+                Talker.Say($"新建目标文件夹:[yellow]{folderName}[/]");
             }
         }
     }
 
     public bool Run()
     {
+        Talker.Whisper("开始转码任务");
+
         bool hasErr = false;
 
         var ffmpegBin = Mission.Preset.GetFFmpegBin();
+        Talker.Whisper("FFmpeg 路径：{0}", ffmpegBin ?? "不可用");
+
         if (ffmpegBin is null)
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]跳过[/] [grey](未找到可用的 FFmpeg)[/]");
+            Talker.Say($"{PrettyNumber}{PrettyName} [red]跳过[/] [grey](未找到可用的 FFmpeg)[/]");
             return false;
         }
 
         if (Mission.TargetConflicted)
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]无法执行[/] [grey](目标与源文件冲突)[/]");
+            Talker.Say($"{PrettyNumber}{PrettyName} [red]无法执行[/] [grey](目标与源文件冲突)[/]");
             return false;
         }
 
         if (!Mission.Overwrite && Mission.TargetExisted)
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [yellow]跳过[/] [grey](目标文件已存在)[/]");
+            Talker.Say($"{PrettyNumber}{PrettyName} [yellow]跳过[/] [grey](目标文件已存在)[/]");
             return true;
         }
+
+        Talker.Whisper("任务预检查通过");
 
         CreateTargetFolders();
 
@@ -106,13 +112,16 @@ class MissionRunner
         Started?.Invoke(this, EventArgs.Empty);
 
         Task<bool> task = Task.Run(() => { return ffmpeg.Run(); });
+        Talker.Whisper("FFmpeg 进程已启动");
 
         while (!task.IsCompleted)
         {
             Thread.Sleep(100);
             if (_cts.IsCancellationRequested)
             {
+                Talker.Whisper("接收到取消信号，正在取消任务……");
                 ffmpeg.Cancel();
+                break;
             }
 
         }
@@ -120,20 +129,21 @@ class MissionRunner
         try { task.Wait(); }
         catch
         {
+            Talker.Whisper("检测到未定义的错误……");
             hasErr = true;
         }
 
         if (_cts.IsCancellationRequested)
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]用户取消[/]");
+            Talker.Say($"{PrettyNumber}{PrettyName} [red]用户取消[/]");
         }
         else if (hasErr || !task.Result)
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]失败[/] [grey](未知错误)[/]");
+            Talker.Say($"{PrettyNumber}{PrettyName} [red]失败[/] [grey](未知错误)[/]");
         }
         else
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [green]完成[/]");
+            Talker.Say($"{PrettyNumber}{PrettyName} [green]完成[/]");
         }
 
         Finished?.Invoke(this, EventArgs.Empty);
@@ -148,8 +158,12 @@ class MissionRunner
         var run = Task.Run(() => Run())
             .ContinueWith((p) =>
             {
+                Talker.Whisper("开始执行附加任务");
                 if (!p.Result)
+                {
+                    Talker.Whisper("为异常任务清理目标文件");
                     CleanUpTargets();
+                }
                 return Mission.GetTargetReport();
             });
         return run;

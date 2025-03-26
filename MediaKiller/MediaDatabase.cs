@@ -1,5 +1,6 @@
 ﻿using CxStudio;
 using CxStudio.FFmpegHelper;
+using CxStudio.TUI;
 using Microsoft.VisualBasic.FileIO;
 
 namespace MediaKiller;
@@ -70,7 +71,7 @@ internal sealed class MediaDatabase
             Talker.Whisper($"找到 FFprobe 位于：{FFprobeBin}");
     }
 
-    ~MediaDatabase()
+    public void SaveCaches()
     {
         string table = XEnv.ConfigManaer.GetCacheFile("mediainfo.csv");
         using var writer = new StreamWriter(table);
@@ -92,11 +93,18 @@ internal sealed class MediaDatabase
             if (FFprobeBin is null)
                 return null;
 
-            Talker.Whisper($"尝试使用 ffprobe 获取 {path} 的时长……");
+            Talker.Whisper("检测到 FFprobe: {0}", FFprobeBin);
             FFprobe prober = new(FFprobeBin);
             var duration = prober.GetFormatInfo(path)?.Duration;
             if (duration is null)
+            {
+                Talker.Whisper("无法获取 {0} 的时长信息。", path);
                 return null;
+            }
+            else
+            {
+                Talker.Whisper("{0} 的时长：{1}", path, duration.Value.ToFormattedString());
+            }
 
             records[hash] = new Record
             {
@@ -111,15 +119,15 @@ internal sealed class MediaDatabase
         return r.Duration;
     }
 
-    public void SetDuration(string path, Time duration)
-    {
-        var r = new Record
+    /*    public void SetDuration(string path, Time duration)
         {
-            HashCode = path.GetHashCode().ToString(),
-            Duration = duration,
-            Created = DateTime.Now,
-            LastUsed = DateTime.Now
-        };
-        records[r.HashCode] = r;
-    }
+            var r = new Record
+            {
+                HashCode = path.GetHashCode().ToString(),
+                Duration = duration,
+                Created = DateTime.Now,
+                LastUsed = DateTime.Now
+            };
+            records[r.HashCode] = r;
+        }*/
 }

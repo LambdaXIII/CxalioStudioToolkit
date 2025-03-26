@@ -10,6 +10,8 @@ internal sealed class MissionManager
 
     public readonly Dictionary<string, ulong> CompletedTargets = [];
 
+    private XEnv.Talker Talker { get; init; } = new("MissionManager");
+
     public MissionManager AddMission(Preset preset, string source)
     {
         var maker = new MissionMaker(preset);
@@ -20,8 +22,24 @@ internal sealed class MissionManager
     public MissionManager AddMissions(Preset preset, IEnumerable<string> sources)
     {
         var maker = new MissionMaker(preset);
-        foreach (var source in sources)
-            Missions.Add(maker.Make(source));
+
+        SourceExpander expander = new(preset);
+        Talker.Whisper("为预设 {0} 扩展源文件列表……", preset.Name);
+        int count = 0;
+        foreach (var source in expander.Expand(sources))
+        {
+            var mission = maker.Make(source);
+            Talker.Whisper(
+                "新任务 {0} : {1} INPUTS => {2} OUTPUTS",
+                mission.Name,
+                mission.Inputs.Count,
+                mission.Outputs.Count
+                );
+
+            Missions.Add(mission);
+            count++;
+        }
+        Talker.Say("为预设 [blue]{0}[/] 生成 [yellow]{1}[/] 个任务。", preset.Name, count);
         return this;
     }
 
@@ -35,6 +53,7 @@ internal sealed class MissionManager
     public MissionManager AddMissions(IEnumerable<Mission> missions)
     {
         Missions.AddRange(missions);
+        Talker.Whisper("批量添加 {0} 个任务", missions.Count());
         return this;
     }
 
@@ -44,28 +63,21 @@ internal sealed class MissionManager
         return Time.FromSeconds(durationSeconds);
     }
 
-    public static void CreateTargetFolder(Mission mission)
-    {
-        foreach (var oGroup in mission.Outputs)
-        {
-            string? folder = Path.GetDirectoryName(Path.GetFullPath(oGroup.FileName));
-            if (folder is null)
-                continue;
-            Directory.CreateDirectory(folder);
-            XEnv.Whisper($"新建目标文件夹： {folder}");
-        }
-    }
-
     private void AddResults(Dictionary<string, ulong> results)
     {
         foreach (var r in results)
             CompletedTargets[r.Key] = r.Value;
+        Talker.Whisper("添加 {0} 个目标文件记录，目前已有 {1} 条记录。", results.Count, CompletedTargets.Count);
     }
 
     public void Run()
     {
+        Talker.Whisper("转码过程开始");
+
         double totalSeconds = GetTotalDuration().TotalSeconds;
         int missionCount = Missions.Count();
+        Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);
+
         JobCounter jobCounter = new((uint)missionCount);
 
         var progress = AnsiConsole.Progress()
@@ -93,6 +105,8 @@ internal sealed class MissionManager
                 jobCounter.Value = (uint)i + 1;
                 Mission currentMission = Missions[i];
 
+                Talker.Whisper("开始执行任务 {0}：{1}", i + 1, currentMission.Name);
+
                 MissionRunner runner = new(ref currentMission, ref jobCounter);
 
                 totalTask.Description($"总体进度 {runner.PrettyNumber}");
@@ -115,12 +129,14 @@ internal sealed class MissionManager
                 };
 
                 var transcodingTask = runner.Start();
+                Talker.Whisper("开始为任务 {0} 执行转码循环……", jobCounter.Value);
 
                 while (!transcodingTask.IsCompleted)
                 {
                     Thread.Sleep(100);
                     if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                     {
+                        Talker.Whisper("接收到取消信号，正在取消任务 {0}……", jobCounter.Value);
                         runner.Cancel();
                         break;
                     }
@@ -132,17 +148,21 @@ internal sealed class MissionManager
 
                 if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                 {
-                    AnsiConsole.MarkupLine("[red]取消后续任务……[/]");
+                    Talker.Say("[red]取消后续任务……[/]");
                     break;
                 }
 
                 currentProgressTask.StopTask();
+                completedTime += runner.MaxTime;
+                Talker.Whisper("任务 {0} 执行完毕。当前总体进度 {1} 秒。", jobCounter.Value, completedTime);
             } //for
 
-            if (totalTask.StartTime is not null && totalTask.StopTime is not null)
+            Talker.Whisper("全部任务遍历完毕。");
+
+            if (totalTask.StartTime is not null)
             {
                 var timeRange = DateTime.Now - totalTask.StartTime;
-                AnsiConsole.MarkupLine("转码结束，总计耗时[yellow]{0}[/]", timeRange.Value.ToFormattedString());
+                Talker.Say("转码结束，用时 [yellow]{0}[/] 。", timeRange.Value.ToFormattedString());
             }
 
             var targetsCount = CompletedTargets.Count;
@@ -150,8 +170,10 @@ internal sealed class MissionManager
             {
                 ulong totalSize = CompletedTargets.Values.Aggregate((a, b) => a + b);
                 FileSize size = FileSize.FromBytes(totalSize);
-                AnsiConsole.MarkupLine("共生成 [yellow]{0}[/] 个目标文件，总计 [yellow]{1}[/] 。", targetsCount, size.ToString());
+                Talker.Say("共生成 [yellow]{0}[/] 个目标文件，总计 [yellow]{1}[/] 。", targetsCount, size.ToString());
             }
         }); // process.start
+
+        Talker.Whisper("转码过程结束");
     }//Run
 }

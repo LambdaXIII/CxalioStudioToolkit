@@ -37,7 +37,15 @@ internal sealed class XEnv
         Console.CancelKeyPress += HandleCancelation;
     }
 
-    public static void ReportPresets()
+    public static void ShowBanner()
+    {
+        AnsiConsole.Write(new FigletText("MediaKiller").Color(Color.Orange3));
+        AnsiConsole.MarkupLine("[yellow]MediaKiller[/] [blue]v{0}[/]", AppVersion);
+        AnsiConsole.MarkupLine("[grey]A transcode tool from Cxalio Studio ToolKit[/]");
+        AnsiConsole.Write("\n\n");
+    }
+
+    public static void ShowPresetsReport()
     {
         if (Instance.Presets.Count == 0)
         {
@@ -53,7 +61,7 @@ internal sealed class XEnv
         }
     }
 
-    public static void ReportSources()
+    public static void ShowSourcesReport()
     {
         if (Instance.Sources.Count == 0)
         {
@@ -65,7 +73,7 @@ internal sealed class XEnv
 
     public void HandleCancelation(object? _, ConsoleCancelEventArgs e)
     {
-        AnsiConsole.MarkupLine("接收到 [red]取消[/] 信号，正在处理……");
+        AnsiConsole.MarkupLine("[grey]接收到 [red]取消[/] 信号，正在处理…[/]");
         GlobalCancellation.Cancel();
         e.Cancel = true;
     }
@@ -95,25 +103,43 @@ internal sealed class XEnv
         WhisperHandler(XEnv.Instance._talker, msg);
     }
 
+    public static void Whisper(string format, params object[] args)
+    {
+        WhisperHandler(XEnv.Instance._talker, string.Format(format, args));
+    }
+
     public static void Say(string? msg)
     {
         if (string.IsNullOrEmpty(msg)) return;
         SayHandler(XEnv.Instance._talker, msg);
     }
 
+    public static void Say(string format, params object[] args)
+    {
+        SayHandler(XEnv.Instance._talker, string.Format(format, args));
+    }
+
 
     private static void SayHandler(Talker sender, string message)
     {
-        AnsiConsole.MarkupLine(message.Replace("[", "[[").Replace("]", "]]"));
+        AnsiConsole.MarkupLine(
+            message
+            //.Replace("[", "[[")
+            //.Replace("]", "]]")
+            );
     }
 
     private static void WhisperHandler(Talker sender, string message)
     {
-        if (XEnv.Instance.Debug) return;
-        AnsiConsole.MarkupLine("[grey][[{0}]] {1}[/]", sender.Name, message.Replace("[", "[[").Replace("]", "]]"));
+        if (!XEnv.Instance.Debug) return;
+        AnsiConsole.MarkupLine("[grey][[{0}]] {1}[/]", sender.Name,
+            message
+            //.Replace("[", "[[")
+            //.Replace("]", "]]")
+            );
     }
 
-    delegate void TalkHandler(Talker sender, string message);
+    public delegate void TalkHandler(Talker sender, string message);
     public class Talker
     {
         public string Name;
@@ -132,9 +158,19 @@ internal sealed class XEnv
             WannaSay?.Invoke(this, message);
         }
 
+        public void Say(string format, params object[] args)
+        {
+            WannaSay?.Invoke(this, string.Format(format, args));
+        }
+
         public void Whisper(string message)
         {
             WannaWhisper?.Invoke(this, message);
+        }
+
+        public void Whisper(string format, params object[] args)
+        {
+            WannaWhisper?.Invoke(this, string.Format(format, args));
         }
     }
 
