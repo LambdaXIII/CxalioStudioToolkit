@@ -60,11 +60,12 @@ internal sealed class MissionManager
         double totalSeconds = GetTotalDuration().TotalSeconds;
         int missionCount = Missions.Count();
         JobCounter jobCounter = new((uint)missionCount);
+
         var progress = AnsiConsole.Progress()
             .HideCompleted(true)
             .Columns(new ProgressColumn[] {
                                 new TaskDescriptionColumn(),
-                                new SpinnerColumn(Spinner.Known.Circle),
+                                new SpinnerColumn(new CxSpinner()),
                                 new ProgressBarColumn(),
                                 new PercentageColumn(),
                                 new RemainingTimeColumn(),
