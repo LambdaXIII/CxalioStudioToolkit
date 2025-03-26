@@ -54,6 +54,16 @@ internal sealed class MissionMaker(Preset preset)
     private readonly PresetCustomInfoProvider _presetCustomInfoProvider = new PresetCustomInfoProvider(preset);
     private readonly CountNumberProvider _countNumberProvider = new CountNumberProvider();
 
+    /*   public bool Overwrite
+       {
+           get
+           {
+               if (XEnv.Instance.NoOverwrite) return false;
+               if (XEnv.Instance.ForceOverwrite) return true;
+               return _preset.Overwrite;
+           }
+       }*/
+
     public Mission Make(string source)
     {
         source = Path.GetFullPath(source);
@@ -106,7 +116,7 @@ internal sealed class MissionMaker(Preset preset)
         if (_preset.HardwareAccelerate.Length > 0)
             mission.GlobalOptions.AddArgument("-hwaccel", _preset.HardwareAccelerate);
 
-        mission.GlobalOptions.AddArgument(_preset.Overwrite ? "-y" : "-n");
+        //mission.GlobalOptions.AddArgument(Overwrite ? "-y" : "-n");
 
         foreach (ArgumentGroup input in _preset.Inputs)
         {

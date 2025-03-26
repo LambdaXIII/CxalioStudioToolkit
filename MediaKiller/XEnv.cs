@@ -16,6 +16,9 @@ internal sealed class XEnv
 
     public bool Debug { get; set; } = false;
 
+    public bool ForceOverwrite = false;
+    public bool NoOverwrite = false;
+
 
     private static readonly Lazy<XEnv> _instance = new(() => new XEnv());
 

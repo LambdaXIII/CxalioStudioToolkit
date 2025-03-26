@@ -19,13 +19,23 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         [DefaultValue(false)]
         public bool GenerateProfile { get; init; }
 
+        [Description("Force overwrite target files.")]
+        [CommandOption("-y|--force-overwrite")]
+        [DefaultValue(false)]
+        public bool ForceOverwrite { get; init; }
+
+        [Description("Force NOT to overwrite target files.")]
+        [CommandOption("-n|--no-overwrite")]
+        [DefaultValue(false)]
+        public bool NoOverwrite { get; init; }
+
         [Description("The output directory.")]
         [CommandOption("-o|--output <OUTPUT>")]
-        public string? Output { get; set; }
+        public string? Output { get; init; }
 
         [Description("Save missions as a script.")]
         [CommandOption("-s|--save-script <SCRIPT>")]
-        public string? ScriptOutput { get; set; }
+        public string? ScriptOutput { get; init; }
 
         [Description("Enable debug mode.")]
         [CommandOption("-d|--debug")]
@@ -38,6 +48,10 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         XEnv.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
         XEnv.Instance.Debug = settings.Debug;
+        XEnv.Instance.ForceOverwrite = settings.ForceOverwrite;
+        if (XEnv.Instance.ForceOverwrite) AnsiConsole.MarkupLine("已启用[red]强制覆写[/]模式，将忽略预设文件中的相关设置。");
+        XEnv.Instance.NoOverwrite = settings.NoOverwrite;
+        if (XEnv.Instance.NoOverwrite) AnsiConsole.MarkupLine("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
 
         XEnv.DebugMsg("MediaKiller started.  :)");
 
@@ -96,7 +110,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         //Transcode(missions);
 
         MissionManager manager = new();
-        manager.AddMissions(missions).Run();
+        manager.AddMissions(missions);
+        manager.Run();
 
         return 0;
     } // Execute

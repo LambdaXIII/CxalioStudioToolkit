@@ -1,5 +1,4 @@
 ﻿using CxStudio;
-using CxStudio.FFmpegHelper;
 using CxStudio.TUI;
 using Spectre.Console;
 
@@ -8,6 +7,8 @@ namespace MediaKiller;
 internal sealed class MissionManager
 {
     public readonly List<Mission> Missions = new List<Mission>();
+
+    public readonly Dictionary<string, ulong> CompletedTargets = [];
 
     public MissionManager AddMission(Preset preset, string source)
     {
@@ -55,6 +56,12 @@ internal sealed class MissionManager
         }
     }
 
+    private void AddResults(Dictionary<string, ulong> results)
+    {
+        foreach (var r in results)
+            CompletedTargets[r.Key] = r.Value;
+    }
+
     public void Run()
     {
         double totalSeconds = GetTotalDuration().TotalSeconds;
@@ -81,103 +88,69 @@ internal sealed class MissionManager
 
             for (int i = 0; i < missionCount; i++)
             {
+                Thread.Sleep(100);
+
                 jobCounter.Value = (uint)i + 1;
                 Mission currentMission = Missions[i];
 
-                totalTask.Description($"总体进度 [grey][[{jobCounter.Format()}]][/]");
+                MissionRunner runner = new(ref currentMission, ref jobCounter);
 
-                double? currentDuration = currentMission.Duration?.TotalSeconds;
+                totalTask.Description($"总体进度 {runner.PrettyNumber}");
+                var currentProgressTask = ctx.AddTaskBefore(runner.PrettyName, totalTask);
 
-                string missionName = $"[cyan]{currentMission.Name}[/]";
-
-                var currentTask = ctx.AddTaskBefore(missionName, totalTask);
-                if (currentDuration is null)
-                    currentTask.IsIndeterminate(true);
-                else
-                    currentTask
-                    .IsIndeterminate(false)
-                    .MaxValue(currentDuration.Value);
-
-                var ffmpegBin = currentMission.Preset.GetFFmpegBin();
-                if (ffmpegBin is null)
+                runner.ProgressUpdated += (sender, _) =>
                 {
-                    AnsiConsole.MarkupLine("[red]未找到可用的 FFmpeg，任务跳过[/]");
-                    currentTask.StopTask();
-                    totalTask.Increment(currentDuration ?? 1);
-                    continue;
-                }
+                    currentProgressTask
+                    .IsIndeterminate(runner.CurrentTime <= 0)
+                    .MaxValue(runner.MaxTime)
+                    .Value(runner.CurrentTime);
 
-                var ffmpeg = new FFmpeg(ffmpegBin, currentMission.CommandArgument);
-                double currentTime = 0;
-                ffmpeg.CodingStatusChanged += (sender, status) =>
-                {
-                    currentTime = status.CurrentTime?.TotalSeconds ?? currentTime;
-                    currentTask.Value(currentTime);
-                    totalTask.Value(completedTime + currentTime);
+                    string desc = runner.PrettyName;
+                    if (runner.CurrentSpeed > 0)
+                        desc += $" [grey][[{runner.CurrentSpeed:F2}x]][/]";
 
-                    string desc = status.CurrentSpeed is null ? missionName : $"{missionName} [grey][[{status.CurrentSpeed.Value:F2}x]][/]";
-                    currentTask.Description(desc);
+                    currentProgressTask.Description(desc);
 
+                    totalTask.Value(completedTime + runner.CurrentTime);
                 };
 
-                Task<bool> transcodingTask = Task.Run(() => { return ffmpeg.Run(); });
+                var transcodingTask = runner.Start();
+
                 while (!transcodingTask.IsCompleted)
                 {
                     Thread.Sleep(100);
                     if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                     {
-                        ffmpeg.Cancel();
+                        runner.Cancel();
                         break;
                     }
                 }
 
                 transcodingTask.Wait();
-                bool result = transcodingTask.Result;
-                if (result)
-                {
-                    AnsiConsole.MarkupLine("{0} [green]已完成[/]", missionName);
-
-                }
-                else
-                {
-                    AnsiConsole.MarkupLine("{0} [red]失败[/]", missionName);
-                    currentTask.IsIndeterminate(true);
-                    foreach (var oGroup in currentMission.Outputs)
-                    {
-                        var name = oGroup.FileName;
-                        if (File.Exists(name))
-                        {
-                            File.Delete(name);
-                            AnsiConsole.MarkupLine("[red]已清除未完成的目标文件:[/] [cyan]{0}[/]", Path.GetFileName(name));
-                        }
-                    }
-                }
-                currentTask.StopTask();
-                completedTime += currentDuration ?? 1;
+                Dictionary<string, ulong> result = transcodingTask.Result;
+                AddResults(result);
 
                 if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                 {
-                    AnsiConsole.MarkupLine("[red]正在取消后续计划…[/]");
+                    AnsiConsole.MarkupLine("[red]取消后续任务……[/]");
                     break;
                 }
 
-                Thread.Sleep(100);
+                currentProgressTask.StopTask();
             } //for
-
-            //totalTask.StopTask();
-
-            XEnv.DebugMsg("等待全部任务结束……");
-            while (!ctx.IsFinished)
-            {
-                Thread.Sleep(100);
-                if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
-                    break;
-            }
 
             if (totalTask.StartTime is not null && totalTask.StopTime is not null)
             {
                 var timeRange = totalTask.StopTime - totalTask.StartTime;
                 AnsiConsole.MarkupLine("转码结束，总计耗时[yellow]{0}[/]", timeRange.Value.ToFormattedString());
+            }
+
+            var targetsCount = CompletedTargets.Count;
+            if (targetsCount > 0)
+            {
+                ulong totalSize = CompletedTargets.Values.Aggregate((a, b) => a + b);
+                FileSize size = FileSize.FromBytes(totalSize);
+                AnsiConsole.MarkupLine("共生成 [yellow]{0}[/] 个目标文件，总计 [yellow]{1}[/] 。", targetsCount, size.ToString());
             }
         }); // process.start
     }//Run
