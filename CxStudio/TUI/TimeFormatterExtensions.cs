@@ -18,7 +18,7 @@ public static class TimeFormatterExtensions
         if (timeSpan.Seconds > 0 && timeSpan.Days <= 0)
             result += $"{timeSpan.Seconds}秒";
 
-        if (timeSpan.Milliseconds > 0 && timeSpan.Seconds <= 0)
+        if (timeSpan.Milliseconds > 0 && timeSpan.TotalSeconds <= 0)
             result += $"{timeSpan.Milliseconds}毫秒";
 
         if (timeSpan.TotalMilliseconds < 1)
