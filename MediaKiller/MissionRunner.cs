@@ -4,10 +4,10 @@ using Spectre.Console;
 
 namespace MediaKiller;
 
-class MissionRunner(ref Mission mission, ref JobCounter jobCounter)
+class MissionRunner
 {
-    public Mission Mission { get; init; } = mission;
-    public JobCounter JobCounter { get; init; } = jobCounter;
+    public Mission Mission { get; init; }
+    public JobCounter JobCounter { get; init; }
 
     private CancellationTokenSource _cts = new();
     public string PrettyNumber => $"[grey][[{JobCounter.Format()}]][/]";
@@ -23,6 +23,15 @@ class MissionRunner(ref Mission mission, ref JobCounter jobCounter)
     public event EventHandler? Started;
     public event EventHandler? Finished;
     public event EventHandler? ProgressUpdated;
+
+    private Talker Talker { get; init; }
+
+    public MissionRunner(ref Mission mission, ref JobCounter jobCounter)
+    {
+        Mission = mission;
+        JobCounter = jobCounter;
+        Talker = new Talker(Name);
+    }
 
     public void Cancel()
     {
@@ -85,14 +94,8 @@ class MissionRunner(ref Mission mission, ref JobCounter jobCounter)
 
         if (!Mission.Overwrite && Mission.TargetExisted)
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]跳过[/] [grey](目标文件已存在)[/]");
-            return false;
-        }
-
-        if (_cts.Token.IsCancellationRequested)
-        {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]用户取消[/]");
-            return false;
+            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [yellow]跳过[/] [grey](目标文件已存在)[/]");
+            return true;
         }
 
         CreateTargetFolders();
@@ -102,13 +105,12 @@ class MissionRunner(ref Mission mission, ref JobCounter jobCounter)
 
         Started?.Invoke(this, EventArgs.Empty);
 
-
         Task<bool> task = Task.Run(() => { return ffmpeg.Run(); });
 
         while (!task.IsCompleted)
         {
             Thread.Sleep(100);
-            if (_cts.Token.IsCancellationRequested)
+            if (_cts.IsCancellationRequested)
             {
                 ffmpeg.Cancel();
             }
@@ -118,14 +120,25 @@ class MissionRunner(ref Mission mission, ref JobCounter jobCounter)
         try { task.Wait(); }
         catch
         {
-            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]失败[/] [grey]未知错误[/]");
-            return false;
+            hasErr = true;
+        }
+
+        if (_cts.IsCancellationRequested)
+        {
+            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]用户取消[/]");
+        }
+        else if (hasErr || !task.Result)
+        {
+            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [red]失败[/] [grey](未知错误)[/]");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [green]完成[/]");
         }
 
         Finished?.Invoke(this, EventArgs.Empty);
 
-        AnsiConsole.MarkupLine($"{PrettyNumber}{PrettyName} [green]完成[/]");
-        return (!hasErr) && (!IsCancelled);
+        return (!hasErr) && (!IsCancelled) && (task.Result);
     }
 
 

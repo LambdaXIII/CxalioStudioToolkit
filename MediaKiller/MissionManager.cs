@@ -141,7 +141,7 @@ internal sealed class MissionManager
 
             if (totalTask.StartTime is not null && totalTask.StopTime is not null)
             {
-                var timeRange = totalTask.StopTime - totalTask.StartTime;
+                var timeRange = DateTime.Now - totalTask.StartTime;
                 AnsiConsole.MarkupLine("转码结束，总计耗时[yellow]{0}[/]", timeRange.Value.ToFormattedString());
             }
 

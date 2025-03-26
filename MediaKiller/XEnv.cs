@@ -36,11 +36,6 @@ internal sealed class XEnv
         Console.CancelKeyPress += HandleCancelation;
     }
 
-    public static void Err(string message)
-    {
-        Console.Error.WriteLine(message);
-    }
-
     public static void ReportPresets()
     {
         if (Instance.Presets.Count == 0)
@@ -102,6 +97,44 @@ internal sealed class XEnv
         return finder.Find(cmd);
     }
 
+    private static void SayHandler(Talker sender, string message)
+    {
+        AnsiConsole.MarkupLine(message.Replace("[", "[[").Replace("]", "]]"));
+    }
+
+    private static void WhisperHandler(Talker sender, string message)
+    {
+        if (XEnv.Instance.Debug) return;
+        AnsiConsole.MarkupLine("[grey][[{0}]] {1}[/]", sender.Name, message.Replace("[", "[[").Replace("]", "]]"));
+    }
+
+    delegate void TalkHandler(Talker sender, string message);
+    class Talker
+    {
+        public string Name;
+        public event TalkHandler? WannaSay;
+        public event TalkHandler? WannaWhisper;
+
+        public Talker(string name = "")
+        {
+            Name = name;
+            WannaSay += XEnv.SayHandler;
+            WannaWhisper += XEnv.WhisperHandler;
+        }
+
+        public void Say(string message)
+        {
+            WannaSay?.Invoke(this, message);
+        }
+
+        public void Whisper(string message)
+        {
+            WannaWhisper?.Invoke(this, message);
+        }
+    }
 
 }
+
+
+
 
