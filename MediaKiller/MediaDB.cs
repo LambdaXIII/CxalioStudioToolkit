@@ -1,5 +1,7 @@
 ﻿using CxStudio.Core;
 using CxStudio.FFmpegHelper;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace MediaKiller;
 
@@ -12,15 +14,15 @@ internal class MediaDB
 {
     private class Record
     {
-        public string FullPath { get; private set; }
+        public string Key { get; private set; }
         public Time Duration { get; private set; }
         public FileSize Size { get; private set; }
         public DateTime Created { get; private set; }
         public DateTime LastUsed { get; private set; }
         private Mutex m_mutex = new();
-        public Record(string path, Time duration, FileSize size)
+        public Record(string key, Time duration, FileSize size)
         {
-            FullPath = path;
+            Key = key;
             Duration = duration;
             Size = size;
             Created = DateTime.Now;
@@ -31,7 +33,7 @@ internal class MediaDB
             if (fields.Count() < 5)
                 throw new ArgumentException("Invalid field count");
 
-            FullPath = fields.ElementAt(0);
+            Key = fields.ElementAt(0).AutoUnquote();
             Duration = Time.FromSeconds(double.Parse(fields.ElementAt(1)));
             Size = FileSize.FromBytes(ulong.Parse(fields.ElementAt(2)));
             Created = DateTime.Parse(fields.ElementAt(3));
@@ -39,7 +41,7 @@ internal class MediaDB
         }
         public Record(MediaFormatInfo formatInfo)
         {
-            FullPath = formatInfo.FullPath;
+            Key = MakeKey(formatInfo.FullPath);
             Duration = formatInfo.Duration;
             Size = formatInfo.Size;
             Created = DateTime.Now;
@@ -53,13 +55,13 @@ internal class MediaDB
         }
         public bool IsExpirable => LastUsed < DateTime.Now.AddDays(-7) || Created < DateTime.Now.AddDays(-30);
         public List<string> Fields => [
-            FullPath,
+            Key.AutoQuote(","),
             Duration.TotalSeconds.ToString(),
             Size.Bytes.ToString(),
             Created.ToString(),
             LastUsed.ToString()
             ];
-        public override string ToString() => $"{FullPath} {Duration.ToFormattedString()} {Size.FormattedString} {Created} -> {LastUsed}";
+        public override string ToString() => $"({Key}) {Duration.ToFormattedString()} {Size.FormattedString} {Created} -> {LastUsed}";
     }
 
 
@@ -77,35 +79,49 @@ internal class MediaDB
 
     private readonly string SaveFilePath;
 
+    private static string MakeKey(string path)
+    {
+        using SHA256 sha = SHA256.Create();
+        byte[] hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(path));
+        StringBuilder hexString = new StringBuilder(hashBytes.Length * 2);
+        foreach (byte b in hashBytes)
+        {
+            hexString.AppendFormat("{0:x2}", b);
+        }
+        return hexString.ToString();
+    }
+
     private void AddRecord(Record record)
     {
         DataMutex.WaitOne();
-        Database[record.FullPath] = record;
+        Database[record.Key] = record;
         DataMutex.ReleaseMutex();
     }
 
-    private void MarkFailed(string path)
+    private void MarkFailed(string key)
     {
         FailedSourcesMutex.WaitOne();
-        FailedSources.Add(path);
+        FailedSources.Add(key);
         FailedSourcesMutex.ReleaseMutex();
     }
 
     private Record? GetRecordBG(string path)
     {
+        string key = MakeKey(path);
+
         if (FFprobeBin is null)
             return null;
-        if (FailedSources.Contains(path))
+        if (FailedSources.Contains(key))
             return null;
 
-        Database.TryGetValue(path, out Record? result);
+        Database.TryGetValue(key, out Record? result);
         if (result is null)
         {
             FFprobe ffprobe = new(FFprobeBin);
             var minfo = ffprobe.GetFormatInfo(path);
             if (minfo is null)
             {
-                MarkFailed(path);
+                MarkFailed(key);
             }
             else
             {
@@ -163,7 +179,7 @@ internal class MediaDB
             if (fields.Length < 5)
                 continue;
             Record record = new(fields);
-            Database[record.FullPath] = record;
+            Database[record.Key] = record;
         }
         DataMutex.ReleaseMutex();
     }
@@ -176,7 +192,7 @@ internal class MediaDB
 
         List<Record> toBeSaved = [
            .. Database.Values
-                .Where(r => !r.IsExpirable && !FailedSources.Contains(r.FullPath))
+                .Where(r => !r.IsExpirable && !FailedSources.Contains(r.Key))
                 .OrderByDescending(r => r.LastUsed)
                 .Take(3000)
             ];
