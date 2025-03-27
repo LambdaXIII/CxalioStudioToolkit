@@ -84,23 +84,9 @@ internal sealed class MissionManager
         {
             Talker.Whisper("开始计算任务总时长……");
             double totalSeconds = 0;
+            DateTime startTime = DateTime.Now;
 
             var durationProgressTask = ctx.AddTask("[green]统计时长[/]").MaxValue(missionCount).IsIndeterminate(true);
-            /*            var durationCounter = new MissionDurationCounter(Missions);
-                        var durationTask = durationCounter.Start();
-                        while (!durationTask.IsCompleted)
-                        {
-                            Thread.Sleep(50);
-                            if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
-                            {
-                                durationProgressTask.Description("[red]正在取消[/]").IsIndeterminate(true);
-                                Thread.Sleep(500);
-                                durationTask.Wait(XEnv.Instance.GlobalForceCancellation.Token);
-                                return;
-                            }
-                            durationProgressTask.IsIndeterminate(durationCounter.FinishedCount < 1).Value(durationCounter.FinishedCount);
-                        }
-                        durationTask.Wait();*/
 
             foreach (var m in Missions)
             {
@@ -110,7 +96,7 @@ internal sealed class MissionManager
             }
 
             durationProgressTask.StopTask();
-            //double totalSeconds = durationTask.Result;
+
 
             Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);
 
@@ -131,23 +117,19 @@ internal sealed class MissionManager
 
                 MissionRunner runner = new(ref currentMission, ref jobCounter);
 
-                totalTask.Description($"总体进度 {runner.PrettyNumber}");
+                totalTask.Description($"总体进度");
                 var currentProgressTask = ctx.AddTaskBefore(runner.PrettyName, totalTask);
 
                 runner.ProgressUpdated += (sender, _) =>
                 {
-                    currentProgressTask
-                    .IsIndeterminate(runner.CurrentTime <= 0)
-                    .MaxValue(runner.MaxTime)
-                    .Value(runner.CurrentTime);
-
-                    string desc = runner.PrettyName;
+                    string desc = $"{runner.PrettyNumber} {runner.PrettyName}";
                     if (runner.CurrentSpeed > 0)
                         desc += $" [grey][[{runner.CurrentSpeed:F2}x]][/]";
-
-                    currentProgressTask.Description(desc);
-
-                    totalTask.Value(completedTime + runner.CurrentTime);
+                    currentProgressTask
+                        .Description(desc)
+                        .IsIndeterminate(runner.CurrentTime <= 0)
+                        .MaxValue(runner.MaxTime)
+                        .Value(runner.CurrentTime);
                 };
 
                 var transcodingTask = runner.Start();
@@ -156,6 +138,15 @@ internal sealed class MissionManager
                 while (!transcodingTask.IsCompleted)
                 {
                     Thread.Sleep(100);
+
+                    var totalTaskCurrentTime = completedTime + runner.CurrentTime;
+                    var totalTaskRealTime = (DateTime.Now - startTime).TotalSeconds;
+                    var speed = totalTaskCurrentTime / totalTaskRealTime;
+                    string totalDesc = "总体进度";
+                    if (speed > 0)
+                        totalDesc += $" [grey][[{speed:F2}x]][/]";
+                    totalTask.Description(totalDesc).Value(totalTaskCurrentTime);
+
                     if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                     {
                         Talker.Whisper("接收到取消信号，正在取消任务 {0}……", jobCounter.Value);
@@ -181,11 +172,9 @@ internal sealed class MissionManager
 
             Talker.Whisper("全部任务遍历完毕。");
 
-            if (totalTask.StartTime is not null)
-            {
-                var timeRange = DateTime.Now - totalTask.StartTime;
-                Talker.Say("转码结束，用时 [yellow]{0}[/] 。", timeRange.Value.ToFormattedString());
-            }
+            var timeRange = DateTime.Now - startTime;
+            Talker.Say("转码结束，用时 [yellow]{0}[/] 。", timeRange.ToFormattedString());
+
 
             var targetsCount = CompletedTargets.Count;
             if (targetsCount > 0)
