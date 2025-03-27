@@ -35,7 +35,6 @@
   <ItemGroup>
     <ProjectReference Include="..\CxStudio\CxStudio.Core\CxStudio.Core.csproj" />
     <ProjectReference Include="..\CxStudio\CxStudio.TUI\CxStudio.TUI.csproj" />
-    <ProjectReference Include="..\CxStudio\CxStudio.Utils\CxStudio.Utils.csproj" />
   </ItemGroup>
 
 </Project>

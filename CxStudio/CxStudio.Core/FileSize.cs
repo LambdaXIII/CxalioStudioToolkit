@@ -147,19 +147,22 @@ public struct FileSize
         };
     }
 
-    public override string ToString()
+    public string FormattedString
     {
-        var units = new[] { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-        var values = new[] { Bytes, Kilobytes, Megabytes, Gigabytes, Terabytes, Petabytes, Exabytes, Zettabytes, Yottabytes };
-
-        for (int i = values.Length - 1; i >= 0; i--)
+        get
         {
-            if (values[i] >= 1)
-            {
-                return $"{values[i]:F2} {units[i]}";
-            }
-        }
+            var units = new[] { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+            var values = new[] { Bytes, Kilobytes, Megabytes, Gigabytes, Terabytes, Petabytes, Exabytes, Zettabytes, Yottabytes };
 
-        return $"{Bytes} B";
+            for (int i = values.Length - 1; i >= 0; i--)
+            {
+                if (values[i] >= 1)
+                {
+                    return $"{values[i]:F2} {units[i]}";
+                }
+            }
+
+            return $"{Bytes} B";
+        }
     }
 }

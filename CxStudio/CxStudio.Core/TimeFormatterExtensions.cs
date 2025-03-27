@@ -1,6 +1,4 @@
-﻿using CxStudio.Core;
-
-namespace CxStudio.TUI;
+﻿namespace CxStudio.Core;
 
 public static class TimeFormatterExtensions
 {
