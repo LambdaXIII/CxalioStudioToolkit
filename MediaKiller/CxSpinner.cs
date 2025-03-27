@@ -8,5 +8,12 @@ class CxSpinner : Spinner
 
     public override bool IsUnicode => true;
 
-    public override IReadOnlyList<string> Frames => [".", "..", "...", "....", ".....", "......", ".......", "........", ".........", ".........."];
+    public override IReadOnlyList<string> Frames => [
+        "···",
+        " •··",
+        "  •··",
+        "   •·",
+        "·   •",
+        "··   ",
+        ];
 }
