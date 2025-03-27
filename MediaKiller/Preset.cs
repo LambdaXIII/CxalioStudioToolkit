@@ -30,7 +30,7 @@ internal sealed class Preset
     const string DefaultSuffixes = ".mov .mp4 .mkv .avi .wmv .flv .webm .m4v .ts .m2ts .m2t .mts .m2v .m4v .vob .3gp .3g2 .f4v .ogv .ogg .mpg .mpeg .mxf .asf .rm .rmvb .divx .xvid .h264 .h265 .hevc .vp8 .vp9 .av1 .avc .avchd .flac .mp3 .wav .m4a .aac .ogg .wma .flac .alac .aiff .ape .dsd .pcm .ac3 .dts .eac3 .mp2 .mpa .opus .mka .mkv .webm .flv .ts .m2ts .m2t .mts .m2v .m4v .vob .wav .m4a .aac .ogg .wma .flac .alac .aiff .ape .dsd .pcm .ac3 .dts .eac3 .mp2 .mpa .opus .mka";
 
 
-
+    private readonly XEnv.Talker Talker = new("Preset");
 
     private void LoadGeneralTable(ref TomlTable profile)
     {
@@ -114,7 +114,7 @@ internal sealed class Preset
                 }
                 break;
         }
-        XEnv.Whisper($"Acceptable suffixes: {string.Join(" ", AcceptableSuffixes)}");
+        Talker.Whisper($"Acceptable suffixes: {string.Join(" ", AcceptableSuffixes)}");
     }
 
     private void LoadTargetTable(ref TomlTable profile)
@@ -169,10 +169,9 @@ internal sealed class Preset
 
     public static Preset Load(string path)
     {
-        XEnv.Whisper($"Loading preset: {path}");
         Preset result = new()
         {
-            PresetPath = path
+            PresetPath = path,
         };
 
         var profile = Toml.ReadFile(path);
