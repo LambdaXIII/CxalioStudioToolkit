@@ -88,17 +88,18 @@ internal sealed class MissionManager
             var durationTask = durationCounter.Start();
             while (!durationTask.IsCompleted)
             {
-                Thread.Sleep(5);
+                Thread.Sleep(50);
                 if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
                 {
                     durationProgressTask.Description("[red]正在取消[/]").IsIndeterminate(true);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
                     durationTask.Wait(XEnv.Instance.GlobalForceCancellation.Token);
                     return;
                 }
                 durationProgressTask.IsIndeterminate(durationCounter.FinishedCount < 1).Value(durationCounter.FinishedCount);
             }
             durationTask.Wait();
+            durationProgressTask.StopTask();
             double totalSeconds = durationTask.Result;
 
             Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);

@@ -14,7 +14,7 @@ public class FFprobe
         FFprobeBin = ffprobe_bin;
     }
 
-    private ProcessStartInfo MakeProcessStartInfo(string source, string target)
+    private ProcessStartInfo MakeProcessStartInfo(string source)
     {
 
         var result = new ProcessStartInfo
@@ -37,11 +37,11 @@ public class FFprobe
         return result;
     }
 
-    public MediaFormatInfo? GetFormatInfo(string source)
+    public MediaFormatInfo? GetFormatInfo(string source, int timeout = 10000)
     {
         string sourceFullPath = Path.GetFullPath(source);
-        string reportPath = Path.GetTempFileName();
-        ProcessStartInfo info = MakeProcessStartInfo(sourceFullPath, reportPath);
+        //string reportPath = Path.GetTempFileName();
+        ProcessStartInfo info = MakeProcessStartInfo(sourceFullPath);
 
         //Console.WriteLine($"{FFprobeBin} {String.Join(" ", info.ArgumentList)}");
 
@@ -52,11 +52,11 @@ public class FFprobe
         };
 
         process.Start();
-        bool done = process.WaitForExit(TimeSpan.FromSeconds(30));
+        bool done = process.WaitForExit(timeout);
 
         if (!done)
         {
-            Console.WriteLine("FFprobe timeout");
+            //Console.WriteLine("FFprobe timeout");
             process.Kill();
             //Console.Write(process.StandardOutput);
             //Console.Write(File.ReadAllText(reportPath));

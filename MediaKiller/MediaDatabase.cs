@@ -148,7 +148,6 @@ internal sealed class MediaDatabase
                 LastUsed = DateTime.Now
             };
 
-
             Talker.Whisper("新记录：{0}", new_record.ToString());
             _records[new_record.FullPath] = new_record;
 
