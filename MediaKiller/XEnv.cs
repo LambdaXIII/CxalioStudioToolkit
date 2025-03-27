@@ -30,6 +30,8 @@ internal sealed class XEnv
 
     public CancellationTokenSource GlobalCancellation = new();
     public CancellationTokenSource GlobalForceCancellation = new();
+    public event Action? UserCancelled;
+
     private DateTime? LastCancelTime = null;
 
     private XEnv()
@@ -82,9 +84,12 @@ internal sealed class XEnv
             return;
         }
         Say("[grey]接收到 [red]取消[/] 信号，正在处理…[/]");
-        LastCancelTime = DateTime.Now;
+
         GlobalCancellation.Cancel();
+        UserCancelled?.Invoke();
         e.Cancel = true;
+
+        LastCancelTime = DateTime.Now;
     }
 
 
@@ -192,7 +197,7 @@ internal sealed class XEnv
                 WannaWhisper += XEnv.WhisperHandler;
         }
     }
-
+    //TODO: 统一清理文件
 }
 
 

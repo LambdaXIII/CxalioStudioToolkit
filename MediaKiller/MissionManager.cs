@@ -135,9 +135,23 @@ internal sealed class MissionManager
                 var transcodingTask = runner.Start();
                 Talker.Whisper("开始为任务 {0} 执行转码循环……", jobCounter.Value);
 
+                bool wannaCancelCurrent = false;
+                var cancelAction = () => { wannaCancelCurrent = true; };
+                XEnv.Instance.UserCancelled += cancelAction;
+
                 while (!transcodingTask.IsCompleted)
                 {
                     Thread.Sleep(100);
+
+                    if (wannaCancelCurrent || XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
+                    {
+                        Talker.Whisper("正在取消任务{0}……", jobCounter.Value);
+                        runner.Cancel();
+                        currentProgressTask.IsIndeterminate(true);
+                        //transcodingTask.Wait(XEnv.Instance.GlobalForceCancellation.Token);
+                        transcodingTask.Wait();
+                        break;
+                    }
 
                     var totalTaskCurrentTime = completedTime + runner.CurrentTime;
                     var totalTaskRealTime = (DateTime.Now - startTime).TotalSeconds;
@@ -146,20 +160,13 @@ internal sealed class MissionManager
                     if (speed > 0)
                         totalDesc += $" [grey][[{speed:F2}x]][/]";
                     totalTask.Description(totalDesc).Value(totalTaskCurrentTime);
-
-                    if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
-                    {
-                        Talker.Whisper("接收到取消信号，正在取消任务 {0}……", jobCounter.Value);
-                        runner.Cancel();
-                        break;
-                    }
                 }
 
-                transcodingTask.Wait();
+                //transcodingTask.Wait();
                 Dictionary<string, ulong> result = transcodingTask.Result;
                 AddResults(result);
 
-                if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
                 {
                     Talker.Say("[red]取消后续任务……[/]");
                     break;

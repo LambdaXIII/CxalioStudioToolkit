@@ -82,7 +82,7 @@ class MissionRunner
         bool hasErr = false;
 
         var ffmpegBin = Mission.Preset.GetFFmpegBin();
-        Talker.Whisper("FFmpeg 路径：{0}", ffmpegBin ?? "不可用");
+        //Talker.Whisper("FFmpeg 路径：{0}", ffmpegBin ?? "不可用");
 
         if (ffmpegBin is null)
         {
