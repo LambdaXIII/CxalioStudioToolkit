@@ -1,12 +1,11 @@
 ﻿using CxStudio.Core;
 using CxStudio.TUI;
 using Spectre.Console;
-
 namespace MediaKiller;
 
 internal sealed class MissionManager
 {
-    public readonly List<Mission> Missions = new List<Mission>();
+    public readonly List<Mission> Missions = [];
 
     public readonly Dictionary<string, ulong> CompletedTargets = [];
 
@@ -57,12 +56,6 @@ internal sealed class MissionManager
         return this;
     }
 
-    public Time GetTotalDuration()
-    {
-        double durationSeconds = Missions.Sum(mission => mission.Duration?.TotalSeconds ?? 1);
-        return Time.FromSeconds(durationSeconds);
-    }
-
     private void AddResults(Dictionary<string, ulong> results)
     {
         foreach (var r in results)
@@ -74,10 +67,7 @@ internal sealed class MissionManager
     {
         Talker.Whisper("转码过程开始");
 
-        double totalSeconds = GetTotalDuration().TotalSeconds;
         int missionCount = Missions.Count();
-        Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);
-
         JobCounter jobCounter = new((uint)missionCount);
 
         var progress = AnsiConsole.Progress()
@@ -92,6 +82,27 @@ internal sealed class MissionManager
 
         progress.Start(ctx =>
         {
+            Talker.Whisper("开始计算任务总时长……");
+            var durationProgressTask = ctx.AddTask("[green]统计时长[/]").MaxValue(missionCount).IsIndeterminate(true);
+            var durationCounter = new MissionDurationCounter(Missions);
+            var durationTask = durationCounter.Start();
+            while (!durationTask.IsCompleted)
+            {
+                Thread.Sleep(5);
+                if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                {
+                    durationProgressTask.Description("[red]正在取消[/]").IsIndeterminate(true);
+                    Thread.Sleep(2000);
+                    durationTask.Wait(XEnv.Instance.GlobalCancellation.Token);
+                    return;
+                }
+                durationProgressTask.IsIndeterminate(false).Value(durationCounter.FinishedCount);
+            }
+            durationTask.Wait();
+            double totalSeconds = durationTask.Result;
+
+            Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);
+
             double completedTime = 0;
 
             var totalTask = ctx.AddTask("总体进度").MaxValue(totalSeconds);

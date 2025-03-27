@@ -65,6 +65,10 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         {
             exitCode = MainProcess(ref settings);
         }
+        catch (OperationCanceledException)
+        {
+            Talker.Say("[red]任务被强制取消[/]");
+        }
         catch (Exception ex)
         {
 
