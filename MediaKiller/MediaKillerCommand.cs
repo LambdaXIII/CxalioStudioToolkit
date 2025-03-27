@@ -67,7 +67,12 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
         catch (Exception ex)
         {
+
+            AnsiConsole.Write(Text.NewLine);
+            AnsiConsole.Write(new Rule("[red]错误报告[/]").LeftJustified());
             AnsiConsole.WriteException(ex);
+            AnsiConsole.Write(new Rule("[red]END[/]").RightJustified());
+            AnsiConsole.Write(Text.NewLine);
             exitCode = 1;
         }
         finally
