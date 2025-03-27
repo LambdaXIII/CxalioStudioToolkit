@@ -83,24 +83,34 @@ internal sealed class MissionManager
         progress.Start(ctx =>
         {
             Talker.Whisper("开始计算任务总时长……");
+            double totalSeconds = 0;
+
             var durationProgressTask = ctx.AddTask("[green]统计时长[/]").MaxValue(missionCount).IsIndeterminate(true);
-            var durationCounter = new MissionDurationCounter(Missions);
-            var durationTask = durationCounter.Start();
-            while (!durationTask.IsCompleted)
+            /*            var durationCounter = new MissionDurationCounter(Missions);
+                        var durationTask = durationCounter.Start();
+                        while (!durationTask.IsCompleted)
+                        {
+                            Thread.Sleep(50);
+                            if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
+                            {
+                                durationProgressTask.Description("[red]正在取消[/]").IsIndeterminate(true);
+                                Thread.Sleep(500);
+                                durationTask.Wait(XEnv.Instance.GlobalForceCancellation.Token);
+                                return;
+                            }
+                            durationProgressTask.IsIndeterminate(durationCounter.FinishedCount < 1).Value(durationCounter.FinishedCount);
+                        }
+                        durationTask.Wait();*/
+
+            foreach (var m in Missions)
             {
-                Thread.Sleep(50);
-                if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
-                {
-                    durationProgressTask.Description("[red]正在取消[/]").IsIndeterminate(true);
-                    Thread.Sleep(500);
-                    durationTask.Wait(XEnv.Instance.GlobalForceCancellation.Token);
-                    return;
-                }
-                durationProgressTask.IsIndeterminate(durationCounter.FinishedCount < 1).Value(durationCounter.FinishedCount);
+                totalSeconds += m.Duration.TotalSeconds;
+                durationProgressTask.Increment(1);
+                if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested) return;
             }
-            durationTask.Wait();
+
             durationProgressTask.StopTask();
-            double totalSeconds = durationTask.Result;
+            //double totalSeconds = durationTask.Result;
 
             Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);
 

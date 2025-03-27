@@ -41,12 +41,19 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         [CommandOption("-d|--debug")]
         [DefaultValue(false)]
         public bool Debug { get; set; }
+
+        [Description("Clear media information caches")]
+        [CommandOption("-c|--clean")]
+        [DefaultValue(false)]
+        public bool ClearCaches { get; set; }
     }
 
     private readonly XEnv.Talker Talker = new("MainLoop");
 
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
+        XEnv.ShowBanner();
+
         int exitCode = 0;
         XEnv.Instance.Debug = settings.Debug;
         Talker.ReInstall();
@@ -60,6 +67,12 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
         XEnv.Instance.NoOverwrite = settings.NoOverwrite;
         if (XEnv.Instance.NoOverwrite) Talker.Say("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
+
+        if (settings.ClearCaches)
+        {
+            Talker.Say("将重新生成所有媒体信息");
+            MediaDB.Instance.ClearCaches();
+        }
 
         try
         {
@@ -81,7 +94,7 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
         finally
         {
-            MediaDatabase.Instance.SaveCaches();
+            MediaDB.Instance.SaveRecords();
             if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                 Talker.Say("[grey]任务[red]并未未全部完成[/]，下次使用[yellow]同样的参数[/]并[yellow]添加 -n 选项[/]，即可[green]跳过已完成的任务[/]。[/]");
         }
@@ -90,7 +103,6 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
     private int MainProcess(ref Settings settings)
     {
-        XEnv.ShowBanner();
         Talker.Whisper("MediaKiller started.  :)");
 
         if (settings.GenerateProfile)

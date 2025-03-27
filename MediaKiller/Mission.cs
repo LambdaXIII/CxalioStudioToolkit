@@ -3,8 +3,8 @@ namespace MediaKiller;
 
 struct Mission
 {
-    public string FFmpegPath;
-    public string Source;
+    public required string FFmpegPath { get; init; }
+    public required string Source { get; init; }
 
     public ArgumentGroup GlobalOptions;
 
@@ -20,12 +20,8 @@ struct Mission
     {
         get
         {
-            if (_duration is null)
-            {
-                using Mutex mutex = new Mutex(true, "MissionDurationGetter" + Name);
-                mutex.WaitOne();
-                _duration ??= MediaDatabase.Instance.GetDuration(Source) ?? Time.FromSeconds(1);
-            }
+            if (_duration == null)
+                _duration = MediaDB.Instance.GetDuration(Source) ?? Time.OneSecond;
             return _duration.Value;
         }
     }

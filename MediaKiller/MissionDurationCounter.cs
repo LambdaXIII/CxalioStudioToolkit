@@ -16,7 +16,7 @@ internal sealed class MissionDurationCounter
 
     public double Run()
     {
-        var times = Missions.AsParallel()
+        var times = Missions
             .Select(mission =>
             {
                 double s = mission.Duration.TotalSeconds;

@@ -108,7 +108,7 @@ internal sealed class XEnv
 
     public static void Whisper(string? msg)
     {
-        if (string.IsNullOrEmpty(msg)) return;
+        if (Instance.Debug || string.IsNullOrEmpty(msg)) return;
         AnsiConsole.MarkupLine("[grey][[GLOBAL]] {0}[/]", msg);
     }
 

@@ -170,4 +170,7 @@ public readonly struct Time(long ms)
     {
         return HashCode.Combine("time", _ms);
     }
+
+    public static readonly Time Zero = new(0);
+    public static readonly Time OneSecond = FromSeconds(1);
 }
