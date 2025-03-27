@@ -28,13 +28,20 @@ public class FFprobe
             StandardErrorEncoding = Encoding.UTF8
         };
 
-        Process process = new()
+        using Process process = new()
         {
             StartInfo = info,
             EnableRaisingEvents = true
         };
+
         process.Start();
-        process.WaitForExit();
+        bool done = process.WaitForExit(TimeSpan.FromSeconds(10));
+
+        if (!done)
+        {
+            process.Kill();
+            return null;
+        }
 
         JsonNode formatNode = JsonNode.Parse(process.StandardOutput.ReadToEnd())!["format"]!;
 
