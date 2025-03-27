@@ -80,6 +80,7 @@ internal sealed class XEnv
         }
         Say("[grey]接收到 [red]取消[/] 信号，正在处理…[/]");
         LastCancelTime = DateTime.Now;
+        GlobalCancellation.Cancel();
         e.Cancel = true;
     }
 
