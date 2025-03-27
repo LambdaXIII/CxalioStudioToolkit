@@ -29,6 +29,7 @@ internal sealed class XEnv
     public static readonly CxConfigManager ConfigManaer = new(AppName, AppVersion);
 
     public CancellationTokenSource GlobalCancellation = new();
+    public CancellationTokenSource GlobalForceCancellation = new();
     private DateTime? LastCancelTime = null;
 
     private XEnv()
@@ -72,9 +73,11 @@ internal sealed class XEnv
 
     public void HandleCancelation(object? _, ConsoleCancelEventArgs e)
     {
-        if (LastCancelTime is DateTime lastTime && (lastTime - DateTime.Now).TotalSeconds < 3)
+        if (LastCancelTime is DateTime lastTime && (DateTime.Now - lastTime).TotalSeconds < 3)
         {
             Say("好啦好啦，这就退出~ [red]正在强制终止[/]…");
+            GlobalForceCancellation.Cancel();
+            Thread.Sleep(3000);
             Environment.Exit(1);
             return;
         }
