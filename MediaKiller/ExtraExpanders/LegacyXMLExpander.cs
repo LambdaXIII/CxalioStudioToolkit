@@ -1,4 +1,4 @@
-﻿using CxStudio;
+﻿using CxStudio.Core;
 using System.Xml.Linq;
 
 namespace MediaKiller.ExtraExpanders;

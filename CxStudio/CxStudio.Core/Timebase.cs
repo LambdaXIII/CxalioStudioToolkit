@@ -1,4 +1,4 @@
-﻿namespace CxStudio
+﻿namespace CxStudio.Core
 {
     public readonly struct Timebase(ushort fps = 24, bool df = false)
     {

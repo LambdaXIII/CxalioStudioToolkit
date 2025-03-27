@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using System.Web;
 
-namespace CxStudio;
+namespace CxStudio.Core;
 
 public class TextUtils
 {

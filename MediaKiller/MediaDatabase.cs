@@ -1,4 +1,4 @@
-﻿using CxStudio;
+﻿using CxStudio.Core;
 using CxStudio.FFmpegHelper;
 using CxStudio.TUI;
 using Microsoft.VisualBasic.FileIO;

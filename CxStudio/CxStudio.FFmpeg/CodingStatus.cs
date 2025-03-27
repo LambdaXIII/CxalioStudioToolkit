@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using CxStudio.Core;
+using System.Text.RegularExpressions;
 
 namespace CxStudio.FFmpegHelper;
 

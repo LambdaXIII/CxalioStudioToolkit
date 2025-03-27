@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
+﻿using CxStudio.Core;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Nodes;
-
 namespace CxStudio.FFmpegHelper;
 
 public class FFprobe

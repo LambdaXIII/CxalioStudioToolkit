@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace CxStudio;
+namespace CxStudio.Core;
 
 public readonly struct Time(long ms)
 {
@@ -41,14 +41,14 @@ public readonly struct Time(long ms)
     }
 
     public ushort MilliSeconds => (ushort)(_ms % 1000);
-    public ushort Seconds => (ushort)((_ms / 1000) % 60);
-    public ushort Minutes => (ushort)((_ms / 60000) % 60);
-    public ushort Hours => (ushort)((_ms / 3600000) % 24);
+    public ushort Seconds => (ushort)(_ms / 1000 % 60);
+    public ushort Minutes => (ushort)(_ms / 60000 % 60);
+    public ushort Hours => (ushort)(_ms / 3600000 % 24);
     public ushort Days => (ushort)(_ms / 86400000);
 
     public readonly string ToTimecode(Timebase timebase)
     {
-        ushort frames = (ushort)Math.Round(((double)MilliSeconds / 1000.0) * timebase.framerate);
+        ushort frames = (ushort)Math.Round(MilliSeconds / 1000.0 * timebase.framerate);
         string framesStr = frames.ToString().PadLeft(timebase.framerate.ToString().Length, '0');
         var sep = timebase.dropframe ? ";" : ":";
         return $"{Hours:D2}:{Minutes:D2}:{Seconds:D2}{sep}{framesStr}";
@@ -67,7 +67,7 @@ public readonly struct Time(long ms)
             long ms1 = hours * 60 * 60 * 1000;
             long ms2 = minutes * 60 * 1000;
             long ms3 = seconds * 1000;
-            long ms4 = (long)Math.Round((double)frames / (double)timebase.framerate * 1000);
+            long ms4 = (long)Math.Round(frames / (double)timebase.framerate * 1000);
 
 
             long total_ms = ms1 + ms2 + ms3 + ms4;

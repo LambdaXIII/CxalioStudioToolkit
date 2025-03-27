@@ -1,10 +1,5 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using CxStudio.Core;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace CxStudio.Captioning;
 

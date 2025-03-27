@@ -1,4 +1,6 @@
-﻿namespace CxStudio.FFmpegHelper;
+﻿using CxStudio.Core;
+
+namespace CxStudio.FFmpegHelper;
 
 public struct MediaFormatInfo
 {

@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace CxStudio;
+namespace CxStudio.Core;
 
 public struct FileSize
 {

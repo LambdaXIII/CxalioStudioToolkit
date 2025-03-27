@@ -1,4 +1,6 @@
-﻿namespace CxStudio.Captioning;
+﻿using CxStudio.Core;
+
+namespace CxStudio.Captioning;
 
 public struct StaticSubtitle
 {

@@ -1,4 +1,4 @@
-﻿using CxStudio;
+﻿using CxStudio.Core;
 using CxStudio.CxConfig;
 using Spectre.Console;
 

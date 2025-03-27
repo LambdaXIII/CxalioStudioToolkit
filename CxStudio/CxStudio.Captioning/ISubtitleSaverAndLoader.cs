@@ -1,6 +1,3 @@
-
-using System.Collections.Generic;
-
 namespace CxStudio.Captioning;
 
 public interface ISubtitleLoader
