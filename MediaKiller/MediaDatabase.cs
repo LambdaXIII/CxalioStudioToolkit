@@ -12,6 +12,10 @@ internal sealed class MediaDatabase
 
     public string? FFprobeBin { get; init; }
 
+    private Mutex dataMutex = new();
+
+    public readonly HashSet<string> FailedSources = [];
+
     public class Record
     {
         public required string FullPath { get; init; }
@@ -83,6 +87,15 @@ internal sealed class MediaDatabase
 
     public void SaveCaches()
     {
+        if (FailedSources.Count > 0)
+        {
+            Talker.Whisper("以下文件无法读取或处理：");
+            foreach (var source in FailedSources)
+            {
+                Talker.Whisper("\t{0}", source);
+            }
+        }
+
         string table = XEnv.ConfigManaer.GetCacheFile("mediainfo.csv");
         using var writer = new StreamWriter(table);
         bool expiring_enabled = _records.Count > 3000;
@@ -106,35 +119,40 @@ internal sealed class MediaDatabase
     {
         if (!_records.ContainsKey(path))
         {
-            using Mutex mutex = new(true, "MediaDBGetRecord");
-            mutex.WaitOne();
-            if (!_records.ContainsKey(path))
+            if (FFprobeBin is null)
+                return null;
+
+            if (FailedSources.Contains(path))
+                return null;
+
+            Talker.Whisper("未找到记录，正在获取信息……");
+
+            FFprobe prober = new(FFprobeBin);
+            var info = prober.GetFormatInfo(path);
+
+            dataMutex.WaitOne();
+
+            if (info is null)
             {
-                if (FFprobeBin is null)
-                    return null;
-
-                Talker.Whisper("未找到记录，正在获取信息……");
-
-                FFprobe prober = new(FFprobeBin);
-                var info = prober.GetFormatInfo(path);
-
-                if (info is null)
-                {
-                    Talker.Whisper("获取文件信息失败！ {0}", path);
-                    return null;
-                }
-
-                var new_record = new Record
-                {
-                    FullPath = path,
-                    Duration = info.Value.Duration,
-                    Size = info.Value.Size,
-                    Created = DateTime.Now,
-                    LastUsed = DateTime.Now
-                };
-                Talker.Whisper("新记录：{0}", new_record.ToString());
-                _records[new_record.FullPath] = new_record;
+                Talker.Whisper("获取文件信息失败！ {0}", path);
+                FailedSources.Add(path);
+                return null;
             }
+
+            var new_record = new Record
+            {
+                FullPath = path,
+                Duration = info.Value.Duration,
+                Size = info.Value.Size,
+                Created = DateTime.Now,
+                LastUsed = DateTime.Now
+            };
+
+
+            Talker.Whisper("新记录：{0}", new_record.ToString());
+            _records[new_record.FullPath] = new_record;
+
+            dataMutex.ReleaseMutex();
         }
 
         _records[path].UpdateLastUsed();

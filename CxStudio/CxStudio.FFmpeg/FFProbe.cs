@@ -7,19 +7,19 @@ namespace CxStudio.FFmpegHelper;
 public class FFprobe
 {
     public readonly string FFprobeBin;
+    public static readonly string CommonArguments = "-v quiet -print_format json -show_format";
 
     public FFprobe(string ffprobe_bin = "ffprobe")
     {
         FFprobeBin = ffprobe_bin;
     }
 
-    public MediaFormatInfo? GetFormatInfo(string source)
+    private ProcessStartInfo MakeProcessStartInfo(string source, string target)
     {
-        string sourceFullPath = Path.GetFullPath(source);
-        ProcessStartInfo info = new()
+
+        var result = new ProcessStartInfo
         {
             FileName = FFprobeBin,
-            Arguments = $"-v quiet -print_format json -show_format {TextUtils.QuoteSpacedString(sourceFullPath)}",
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -27,6 +27,23 @@ public class FFprobe
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
+        foreach (var a in CommonArguments.Split(' '))
+            result.ArgumentList.Add(a);
+
+        //result.ArgumentList.Add(TextUtils.QuoteSpacedString(source));
+        result.ArgumentList.Add(source);
+        //result.ArgumentList.Add(">");
+        //result.ArgumentList.Add(target);
+        return result;
+    }
+
+    public MediaFormatInfo? GetFormatInfo(string source)
+    {
+        string sourceFullPath = Path.GetFullPath(source);
+        string reportPath = Path.GetTempFileName();
+        ProcessStartInfo info = MakeProcessStartInfo(sourceFullPath, reportPath);
+
+        //Console.WriteLine($"{FFprobeBin} {String.Join(" ", info.ArgumentList)}");
 
         using Process process = new()
         {
@@ -35,15 +52,23 @@ public class FFprobe
         };
 
         process.Start();
-        bool done = process.WaitForExit(TimeSpan.FromSeconds(10));
+        bool done = process.WaitForExit(TimeSpan.FromSeconds(30));
 
         if (!done)
         {
+            Console.WriteLine("FFprobe timeout");
             process.Kill();
+            //Console.Write(process.StandardOutput);
+            //Console.Write(File.ReadAllText(reportPath));
             return null;
         }
 
-        JsonNode formatNode = JsonNode.Parse(process.StandardOutput.ReadToEnd())!["format"]!;
+        string totalOutput = process.StandardOutput.ReadToEnd();
+        //+ process.StandardError.ReadToEnd();
+
+        //string totalOutput = File.ReadAllText(reportPath);
+
+        JsonNode formatNode = JsonNode.Parse(totalOutput)!["format"]!;
 
         var tags = formatNode["tags"]?.AsObject()?.ToDictionary(x => x.Key, x => x.Value!.GetValue<string>());
 

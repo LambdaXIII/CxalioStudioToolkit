@@ -89,11 +89,11 @@ internal sealed class MissionManager
             while (!durationTask.IsCompleted)
             {
                 Thread.Sleep(5);
-                if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
+                if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
                 {
                     durationProgressTask.Description("[red]正在取消[/]").IsIndeterminate(true);
-                    Thread.Sleep(2000);
-                    durationTask.Wait(XEnv.Instance.GlobalCancellation.Token);
+                    Thread.Sleep(1000);
+                    durationTask.Wait(XEnv.Instance.GlobalForceCancellation.Token);
                     return;
                 }
                 durationProgressTask.IsIndeterminate(durationCounter.FinishedCount < 1).Value(durationCounter.FinishedCount);
