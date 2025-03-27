@@ -15,7 +15,20 @@ struct Mission
 
     public readonly string Name => Path.GetFileNameWithoutExtension(Source);
 
-    public readonly Time? Duration => MediaDatabase.Instance.GetDuration(Source);
+    private Time? _duration;
+    public Time Duration
+    {
+        get
+        {
+            if (_duration is null)
+            {
+                using Mutex mutex = new Mutex(true, "MissionDurationGetter" + Name);
+                mutex.WaitOne();
+                _duration ??= MediaDatabase.Instance.GetDuration(Source) ?? Time.FromSeconds(1);
+            }
+            return _duration.Value;
+        }
+    }
 
     public readonly bool TargetConflicted
     {

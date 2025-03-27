@@ -4,6 +4,7 @@ namespace MediaKiller.ExtraExpanders;
 
 class CsvMetadataExpander : ISourcePreExpander
 {
+    private readonly XEnv.Talker Talker = new("CSVExpander");
     private readonly HashSet<string> _cache = [];
 
     private class FieldChecker(string[] headers)
@@ -51,7 +52,10 @@ class CsvMetadataExpander : ISourcePreExpander
             string directory = checker.GetValue("Clip Directory", values) ?? "";
             string res = Path.Combine(directory, file_name);
             if (!string.IsNullOrEmpty(res))
+            {
+                Talker.Whisper("Found: {0}", res);
                 yield return res;
+            }
         }
     }
 }

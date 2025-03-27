@@ -14,7 +14,7 @@ class MissionRunner
 
     public double CurrentSpeed { get; private set; } = 0;
     public double CurrentTime { get; private set; } = 0;
-    public double MaxTime => Mission.Duration?.TotalSeconds ?? 1;
+    public double MaxTime => Mission.Duration.TotalSeconds;
     public string Name => Mission.Name;
 
     public bool IsCancelled => _cts.IsCancellationRequested;

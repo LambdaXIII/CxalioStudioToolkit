@@ -19,7 +19,7 @@ internal sealed class MissionDurationCounter
         var times = Missions.AsParallel()
             .Select(mission =>
             {
-                double s = mission.Duration?.TotalSeconds ?? 1;
+                double s = mission.Duration.TotalSeconds;
                 Interlocked.Increment(ref _finishedCount);
                 return s;
             }).ToList();

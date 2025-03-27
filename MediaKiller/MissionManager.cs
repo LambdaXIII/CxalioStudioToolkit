@@ -96,7 +96,7 @@ internal sealed class MissionManager
                     durationTask.Wait(XEnv.Instance.GlobalCancellation.Token);
                     return;
                 }
-                durationProgressTask.IsIndeterminate(false).Value(durationCounter.FinishedCount);
+                durationProgressTask.IsIndeterminate(durationCounter.FinishedCount < 1).Value(durationCounter.FinishedCount);
             }
             durationTask.Wait();
             double totalSeconds = durationTask.Result;
@@ -181,7 +181,7 @@ internal sealed class MissionManager
             {
                 ulong totalSize = CompletedTargets.Values.Aggregate((a, b) => a + b);
                 FileSize size = FileSize.FromBytes(totalSize);
-                Talker.Say("共生成 [yellow]{0}[/] 个目标文件，总计 [yellow]{1}[/] 。", targetsCount, size.ToString());
+                Talker.Say("共生成 [yellow]{0}[/] 个目标文件，总计 [yellow]{1}[/] 。", targetsCount, size.FormattedString);
             }
         }); // process.start
 
