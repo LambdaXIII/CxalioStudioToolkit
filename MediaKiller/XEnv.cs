@@ -29,8 +29,7 @@ internal sealed class XEnv
     public static readonly CxConfigManager ConfigManaer = new(AppName, AppVersion);
 
     public CancellationTokenSource GlobalCancellation = new();
-
-    private Talker _talker { get; init; } = new("XEnv");
+    private DateTime? LastCancelTime = null;
 
     private XEnv()
     {
@@ -73,8 +72,14 @@ internal sealed class XEnv
 
     public void HandleCancelation(object? _, ConsoleCancelEventArgs e)
     {
-        AnsiConsole.MarkupLine("[grey]接收到 [red]取消[/] 信号，正在处理…[/]");
-        GlobalCancellation.Cancel();
+        if (LastCancelTime is DateTime lastTime && (lastTime - DateTime.Now).TotalSeconds < 3)
+        {
+            Say("好啦好啦，这就退出~ [red]正在强制终止……[/]");
+            Environment.Exit(1);
+            return;
+        }
+        Say("[grey]接收到 [red]取消[/] 信号，正在处理…[/]");
+        LastCancelTime = DateTime.Now;
         e.Cancel = true;
     }
 
@@ -100,23 +105,27 @@ internal sealed class XEnv
     public static void Whisper(string? msg)
     {
         if (string.IsNullOrEmpty(msg)) return;
-        WhisperHandler(XEnv.Instance._talker, msg);
+        AnsiConsole.MarkupLine("[grey][[GLOBAL]] {0}[/]", msg);
     }
 
     public static void Whisper(string format, params object[] args)
     {
-        WhisperHandler(XEnv.Instance._talker, string.Format(format, args));
+        AnsiConsole.MarkupLine("[grey][[GLOBAL]] {0}[/]",
+            Markup.Escape(
+                string.Format(format, args)
+                )
+            );
     }
 
     public static void Say(string? msg)
     {
         if (string.IsNullOrEmpty(msg)) return;
-        SayHandler(XEnv.Instance._talker, msg);
+        AnsiConsole.MarkupLine(msg);
     }
 
     public static void Say(string format, params object[] args)
     {
-        SayHandler(XEnv.Instance._talker, string.Format(format, args));
+        AnsiConsole.MarkupLine(format, args);
     }
 
 
@@ -124,8 +133,6 @@ internal sealed class XEnv
     {
         AnsiConsole.MarkupLine(
             message
-            //.Replace("[", "[[")
-            //.Replace("]", "]]")
             );
     }
 
@@ -134,8 +141,6 @@ internal sealed class XEnv
         if (!XEnv.Instance.Debug) return;
         AnsiConsole.MarkupLine("[grey][[{0}]] {1}[/]", sender.Name,
             message
-            //.Replace("[", "[[")
-            //.Replace("]", "]]")
             );
     }
 
@@ -150,7 +155,8 @@ internal sealed class XEnv
         {
             Name = name;
             WannaSay += XEnv.SayHandler;
-            WannaWhisper += XEnv.WhisperHandler;
+            if (XEnv.Instance.Debug)
+                WannaWhisper += XEnv.WhisperHandler;
         }
 
         public void Say(string message)

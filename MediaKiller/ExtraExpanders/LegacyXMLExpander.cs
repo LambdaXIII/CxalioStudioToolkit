@@ -5,6 +5,8 @@ namespace MediaKiller.ExtraExpanders;
 
 internal sealed class LegacyXMLExpander : ISourcePreExpander
 {
+    private readonly XEnv.Talker Talker = new("LegacyXMLExpander");
+
     private readonly HashSet<string> _cache = [];
 
     public bool IsAcceptable(string path)
@@ -36,6 +38,8 @@ internal sealed class LegacyXMLExpander : ISourcePreExpander
 
     public IEnumerable<string> Expand(string path)
     {
+        Talker.Whisper("Expanding {0}", path);
+
         XDocument doc = XDocument.Load(path);
         foreach (var node in doc.Descendants("pathurl"))
         {
@@ -45,6 +49,7 @@ internal sealed class LegacyXMLExpander : ISourcePreExpander
                 continue;
 
             _cache.Add(src_path);
+            Talker.Whisper("Found {0}", src_path);
             yield return src_path;
         }
     }
