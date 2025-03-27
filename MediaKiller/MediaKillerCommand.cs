@@ -48,12 +48,16 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
         int exitCode = 0;
+        XEnv.Instance.Debug = settings.Debug;
+        Talker.ReInstall();
+        Talker.Whisper("Debug mode enabled.");
 
         XEnv.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
-        XEnv.Instance.Debug = settings.Debug;
+
         XEnv.Instance.ForceOverwrite = settings.ForceOverwrite;
         if (XEnv.Instance.ForceOverwrite) Talker.Say("已启用[red]强制覆写[/]模式，将忽略预设文件中的相关设置。");
+
         XEnv.Instance.NoOverwrite = settings.NoOverwrite;
         if (XEnv.Instance.NoOverwrite) Talker.Say("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
 

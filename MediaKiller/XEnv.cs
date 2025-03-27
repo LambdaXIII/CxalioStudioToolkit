@@ -74,7 +74,7 @@ internal sealed class XEnv
     {
         if (LastCancelTime is DateTime lastTime && (lastTime - DateTime.Now).TotalSeconds < 3)
         {
-            Say("好啦好啦，这就退出~ [red]正在强制终止……[/]");
+            Say("好啦好啦，这就退出~ [red]正在强制终止[/]…");
             Environment.Exit(1);
             return;
         }
@@ -177,6 +177,15 @@ internal sealed class XEnv
         public void Whisper(string format, params object[] args)
         {
             WannaWhisper?.Invoke(this, string.Format(format, args));
+        }
+
+        public void ReInstall()
+        {
+            WannaSay -= XEnv.SayHandler;
+            WannaSay += XEnv.SayHandler;
+            WannaWhisper -= XEnv.WhisperHandler;
+            if (XEnv.Instance.Debug)
+                WannaWhisper += XEnv.WhisperHandler;
         }
     }
 
