@@ -22,7 +22,7 @@ class ScriptMaker
                 if (_cached_folders.Contains(oFolder)) continue;
 
                 _cached_folders.Add(oFolder);
-                yield return $"mkdir -p {TextUtils.QuoteSpacedString(oFolder)}";
+                yield return $"mkdir -p {oFolder.AutoQuote()}";
             }
             yield return m.FullCommand;
         }

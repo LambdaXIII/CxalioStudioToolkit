@@ -80,13 +80,13 @@ struct Mission
         {
             cmd.AddRange(input.Arguments());
             cmd.Add("-i");
-            cmd.Add(TextUtils.QuoteSpacedString(input.FileName));
+            cmd.Add(input.FileName.AutoQuote());
         });
 
         Outputs.ForEach(Outputs =>
         {
             cmd.AddRange(Outputs.Arguments());
-            cmd.Add(TextUtils.QuoteSpacedString(Outputs.FileName));
+            cmd.Add(Outputs.FileName.AutoQuote());
         });
 
         return cmd;
