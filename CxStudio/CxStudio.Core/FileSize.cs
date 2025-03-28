@@ -175,4 +175,14 @@ public struct FileSize
     }
 
     public static readonly FileSize Zero = FileSize.FromBytes(0);
+
+    public static FileSize operator +(FileSize a, FileSize b)
+    {
+        return FileSize.FromBytes(a.Bytes + b.Bytes);
+    }
+
+    public static FileSize operator -(FileSize a, FileSize b)
+    {
+        return FileSize.FromBytes(a.Bytes - b.Bytes);
+    }
 }

@@ -155,18 +155,16 @@ class MissionRunner
 
 
 
-    public Task<Dictionary<string, ulong>> Start()
+    public Task<bool> Start()
     {
         var run = Task.Run(() => Run())
             .ContinueWith((p) =>
             {
-                Talker.Whisper("开始执行附加任务");
-                if (!p.Result)
-                {
-                    Talker.Whisper("为异常任务清理目标文件");
-                    CleanUpTargets();
-                }
-                return Mission.GetTargetReport();
+                if (p.Result)
+                    Mission.Targets.ForEach(path => { XEnv.Instance.MarkSucceededFile(path); });
+                else
+                    Mission.Targets.ForEach(path => { XEnv.Instance.MarkGarbage(path); });
+                return p.Result;
             });
         return run;
     }

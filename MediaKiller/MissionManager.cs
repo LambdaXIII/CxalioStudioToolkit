@@ -7,8 +7,6 @@ internal sealed class MissionManager
 {
     public readonly List<Mission> Missions = [];
 
-    public readonly Dictionary<string, ulong> CompletedTargets = [];
-
     private XEnv.Talker Talker { get; init; } = new("MissionManager");
 
     public MissionManager AddMission(Preset preset, string source)
@@ -54,13 +52,6 @@ internal sealed class MissionManager
         Missions.AddRange(missions);
         Talker.Whisper("批量添加 {0} 个任务", missions.Count());
         return this;
-    }
-
-    private void AddResults(Dictionary<string, ulong> results)
-    {
-        foreach (var r in results)
-            CompletedTargets[r.Key] = r.Value;
-        Talker.Whisper("添加 {0} 个目标文件记录，目前已有 {1} 条记录。", results.Count, CompletedTargets.Count);
     }
 
     public void Run()
@@ -163,8 +154,7 @@ internal sealed class MissionManager
                 }
 
                 //transcodingTask.Wait();
-                Dictionary<string, ulong> result = transcodingTask.Result;
-                AddResults(result);
+                bool result = transcodingTask.Result;
 
                 if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
                 {
@@ -181,15 +171,6 @@ internal sealed class MissionManager
 
             var timeRange = DateTime.Now - startTime;
             Talker.Say("转码结束，用时 [yellow]{0}[/] 。", timeRange.ToFormattedString());
-
-
-            var targetsCount = CompletedTargets.Count;
-            if (targetsCount > 0)
-            {
-                ulong totalSize = CompletedTargets.Values.Aggregate((a, b) => a + b);
-                FileSize size = FileSize.FromBytes(totalSize);
-                Talker.Say("共生成 [yellow]{0}[/] 个目标文件，总计 [yellow]{1}[/] 。", targetsCount, size.FormattedString);
-            }
         }); // process.start
 
         Talker.Whisper("转码过程结束");

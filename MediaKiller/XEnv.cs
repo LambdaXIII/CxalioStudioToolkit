@@ -112,6 +112,25 @@ internal sealed class XEnv
         return finder.Find(cmd);
     }
 
+
+    private readonly HashSet<string> _garbageFiles = [];
+    private readonly Mutex _garbageMutex = new();
+    public void MarkGarbage(string filename)
+    {
+        _garbageMutex.WaitOne();
+        _garbageFiles.Add(filename);
+        _garbageMutex.ReleaseMutex();
+    }
+
+    private readonly HashSet<string> _succeededFiles = [];
+    private readonly Mutex _succeededMutex = new();
+    public void MarkSucceededFile(string filename)
+    {
+        _succeededMutex.WaitOne();
+        _succeededFiles.Add(filename);
+        _succeededMutex.ReleaseMutex();
+    }
+
     public static void Whisper(string? msg)
     {
         if (Instance.Debug || string.IsNullOrEmpty(msg)) return;
@@ -198,7 +217,47 @@ internal sealed class XEnv
                 WannaWhisper += XEnv.WhisperHandler;
         }
     }
-    //TODO: 统一清理文件
+
+
+    public void CleanUpEverything()
+    {
+        _garbageMutex.WaitOne();
+        if (_garbageFiles.Count > 0)
+        {
+            Say("[grey]清理垃圾文件：[/]");
+
+            foreach (var filename in _garbageFiles)
+            {
+                if (!File.Exists(filename)) continue;
+                File.Delete(filename);
+                AnsiConsole.Write("\t");
+                AnsiConsole.Write(
+                    new TextPath(filename)
+                    .LeafColor(Color.Grey)
+                    .RootColor(Color.Grey)
+                    .StemColor(Color.Grey)
+                    .SeparatorColor(Color.Grey)
+                    );
+                AnsiConsole.Write(Text.NewLine);
+            }
+
+            _garbageFiles.Clear();
+        }
+        _garbageMutex.ReleaseMutex();
+    }
+
+    public void ReportResults()
+    {
+        _succeededMutex.WaitOne();
+        int count = _succeededFiles.Count;
+        if (count > 0)
+        {
+            ulong totalBytes = (ulong)_succeededFiles.Sum(file => new FileInfo(file).Length);
+            FileSize totalSize = FileSize.FromBytes(totalBytes);
+            Say("成功处理了 [yellow]{0}[/] 个文件，总大小为 [green]{1}[/] 。", count, totalSize.FormattedString);
+        }
+        _succeededMutex.ReleaseMutex();
+    }
 }
 
 

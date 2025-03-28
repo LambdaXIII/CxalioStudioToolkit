@@ -93,21 +93,6 @@ struct Mission
     public readonly string FullCommand => $"{FFmpegPath} {CommandArgument}";
 
 
-    public readonly Dictionary<string, ulong> GetTargetReport()
-    {
-        var result = new Dictionary<string, ulong>();
-
-        foreach (var oGroup in Outputs)
-        {
-            var target = oGroup.FileName;
-            if (File.Exists(target))
-            {
-                var size = (ulong)new FileInfo(target).Length;
-                result.Add(target, size);
-            }
-        }
-
-        return result;
-    }
+    public List<string> Targets => [.. Outputs.Select(oGroup => oGroup.FileName)];
 
 }

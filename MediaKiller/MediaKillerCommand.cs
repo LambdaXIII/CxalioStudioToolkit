@@ -95,6 +95,8 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         finally
         {
             MediaDB.Instance.SaveRecords();
+            XEnv.Instance.ReportResults();
+            XEnv.Instance.CleanUpEverything();
             if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
                 Talker.Say("[grey]任务[red]并未未全部完成[/]，下次使用[yellow]同样的参数[/]并[yellow]添加 -n 选项[/]，即可[green]跳过已完成的任务[/]。[/]");
         }
