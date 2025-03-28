@@ -77,7 +77,8 @@ internal sealed class XEnv
     {
         if (LastCancelTime is DateTime lastTime && (DateTime.Now - lastTime).TotalSeconds < 3)
         {
-            Say("好啦好啦，这就退出~ \n[red]正在强制终止[/]");
+            Say("好啦好啦，这就退出 ~");
+            Say("[red]正在强制终止[/]");
             GlobalForceCancellation.Cancel();
             Thread.Sleep(3000);
             Environment.Exit(1);
