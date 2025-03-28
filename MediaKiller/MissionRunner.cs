@@ -40,7 +40,9 @@ class MissionRunner
 
     private void HandleCodingStatus(object sender, CodingStatus status)
     {
-        CurrentTime = status.CurrentTime?.TotalSeconds ?? CurrentTime;
+        CurrentTime = (MaxTime > 1 && status.CurrentTime is not null)
+            ? status.CurrentTime.Value.TotalSeconds
+            : -1;
         CurrentSpeed = status.CurrentSpeed ?? CurrentSpeed;
         ProgressUpdated?.Invoke(this, EventArgs.Empty);
     }

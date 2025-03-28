@@ -5,11 +5,6 @@ using System.Text;
 
 namespace MediaKiller;
 
-
-
-
-
-
 internal class MediaDB
 {
     private class Record
@@ -79,22 +74,28 @@ internal class MediaDB
 
     private readonly string SaveFilePath;
 
+    private static readonly Dictionary<string, string> KeyCaches = [];
     private static string MakeKey(string path)
     {
-        using SHA256 sha = SHA256.Create();
-        byte[] hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(path));
-        StringBuilder hexString = new StringBuilder(hashBytes.Length * 2);
-        foreach (byte b in hashBytes)
+        if (!KeyCaches.ContainsKey(path))
         {
-            hexString.AppendFormat("{0:x2}", b);
+            using SHA256 sha = SHA256.Create();
+            byte[] hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(path));
+            StringBuilder hexString = new StringBuilder(hashBytes.Length * 2);
+            foreach (byte b in hashBytes)
+            {
+                hexString.AppendFormat("{0:x2}", b);
+            }
+            KeyCaches[path] = hexString.ToString();
         }
-        return hexString.ToString();
+        return KeyCaches[path];
     }
 
     private void AddRecord(Record record)
     {
         DataMutex.WaitOne();
         Database[record.Key] = record;
+        Talker.Whisper("新纪录:{0}", record.ToString());
         DataMutex.ReleaseMutex();
     }
 
@@ -111,17 +112,19 @@ internal class MediaDB
 
         if (FFprobeBin is null)
             return null;
-        if (FailedSources.Contains(key))
+        if (FailedSources.Contains(path))
             return null;
 
         Database.TryGetValue(key, out Record? result);
         if (result is null)
         {
+            Talker.Whisper("开始解析源文件信息：{0}", path);
             FFprobe ffprobe = new(FFprobeBin);
             var minfo = ffprobe.GetFormatInfo(path);
             if (minfo is null)
             {
-                MarkFailed(key);
+                Talker.Whisper("文件解析失败：{0}", path);
+                MarkFailed(path);
             }
             else
             {
@@ -129,12 +132,15 @@ internal class MediaDB
                 AddRecord(result);
             }
         }
-
         return result;
     }
 
     private Record? GetRecord(string path)
     {
+        Database.TryGetValue(MakeKey(path), out Record? result);
+        if (result is Record x)
+            return x;
+
         TaskBase.TryGetValue(path, out var getter);
 
         if (getter is null)
@@ -150,7 +156,7 @@ internal class MediaDB
         }
 
         getter?.Wait();
-        Record? result = getter?.Result;
+        result = getter?.Result;
         result?.UpdateLastUsed();
         return result;
     }
@@ -173,6 +179,9 @@ internal class MediaDB
             return;
 
         DataMutex.WaitOne();
+
+        int count = 0;
+
         foreach (var line in File.ReadAllLines(saveFilePath))
         {
             var fields = line.Split(',');
@@ -180,8 +189,12 @@ internal class MediaDB
                 continue;
             Record record = new(fields);
             Database[record.Key] = record;
+            count++;
         }
+
         DataMutex.ReleaseMutex();
+
+        Talker.Whisper("从 {0} 加载了 {1} 条媒体信息。", saveFilePath, count);
     }
 
     public void SaveRecords(string? saveFilePath = null)
