@@ -1,4 +1,5 @@
 ﻿using CxStudio.Core;
+using CxStudio.FFmpegHelper;
 namespace MediaKiller;
 
 struct Mission
@@ -15,15 +16,22 @@ struct Mission
 
     public readonly string Name => Path.GetFileNameWithoutExtension(Source);
 
+    private static readonly SimpleCache<MediaFormatInfo> formatInfoCache = new();
+
     private Time? _duration;
     public Time Duration
     {
         get
         {
-            if (_duration == null)
-                _duration = MediaDB.Instance.GetDuration(Source) ?? Time.OneSecond;
+            _duration ??= MediaDB.Instance.GetDuration(Source) ?? Time.OneSecond;
             return _duration.Value;
         }
+    }
+
+    private FileSize? _sourceSize;
+    public FileSize SourceSize
+    {
+        get { _sourceSize ??= MediaDB.Instance.GetFileSize(Source); return _sourceSize.Value; }
     }
 
     public readonly bool TargetConflicted
