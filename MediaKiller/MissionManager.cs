@@ -141,7 +141,7 @@ internal sealed class MissionManager
 
                 while (!transcodingTask.IsCompleted)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(500);
 
                     if (wannaCancelCurrent || XEnv.Instance.GlobalForceCancellation.IsCancellationRequested)
                     {

@@ -70,7 +70,8 @@ internal class MediaDB
     private readonly HashSet<string> FailedSources = [];
     private readonly Mutex FailedSourcesMutex = new();
 
-    public readonly string? FFprobeBin = XEnv.GetCommandPath("ffprobe");
+    //public readonly string? FFprobeBin = XEnv.GetCommandPath("ffprobe");
+    public readonly string? FFmpegBin = XEnv.GetCommandPath("ffmpeg");
 
     private readonly string SaveFilePath;
 
@@ -110,7 +111,7 @@ internal class MediaDB
     {
         string key = MakeKey(path);
 
-        if (FFprobeBin is null)
+        if (FFmpegBin is null)
             return null;
         if (FailedSources.Contains(path))
             return null;
@@ -119,8 +120,10 @@ internal class MediaDB
         if (result is null)
         {
             Talker.Whisper("开始解析源文件信息：{0}", path);
-            FFprobe ffprobe = new(FFprobeBin);
-            var minfo = ffprobe.GetFormatInfo(path);
+            //FFprobe ffprobe = new(FFprobeBin);
+            //var minfo = ffprobe.GetFormatInfo(path);
+            FFmpeg ffmpeg = new(FFmpegBin);
+            var minfo = ffmpeg.GetFormatInfo(path);
             if (minfo is null)
             {
                 Talker.Whisper("文件解析失败：{0}", path);

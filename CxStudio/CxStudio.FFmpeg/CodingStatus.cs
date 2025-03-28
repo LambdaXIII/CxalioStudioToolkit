@@ -8,6 +8,7 @@ public struct CodingStatus
     public string? FFmpegBin;
     public string? FfmpegArguments;
     public DateTime? ProcessStart;
+    public DateTime? ProcessEnd;
     public ulong? CurrentFrame;
     public double? CurrentFps;
     public double? CurrentQ;

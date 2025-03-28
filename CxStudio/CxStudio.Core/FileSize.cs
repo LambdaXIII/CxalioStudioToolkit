@@ -107,6 +107,14 @@ public struct FileSize
         };
     }
 
+    static public FileSize FromFile(string path)
+    {
+        var f = new FileInfo(path);
+        if (f.Exists)
+            return FileSize.FromBytes((ulong)f.Length);
+        return FileSize.Zero;
+    }
+
     static public FileSize FromString(string size, Standards standard = Standards.SI)
     {
         if (string.IsNullOrWhiteSpace(size))
@@ -165,4 +173,6 @@ public struct FileSize
             return $"{Bytes} B";
         }
     }
+
+    public static readonly FileSize Zero = FileSize.FromBytes(0);
 }

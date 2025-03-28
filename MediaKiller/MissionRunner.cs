@@ -38,7 +38,7 @@ class MissionRunner
         Talker.Whisper("触发取消操作。");
     }
 
-    private void HandleCodingStatus(object sender, CodingStatus status)
+    private void HandleCodingStatus(CodingStatus status)
     {
         CurrentTime = (MaxTime > 1 && status.CurrentTime is not null)
             ? status.CurrentTime.Value.TotalSeconds
@@ -137,15 +137,15 @@ class MissionRunner
 
         if (_cts.IsCancellationRequested)
         {
-            Talker.Say($"{PrettyNumber}{PrettyName} [red]用户取消[/]");
+            Talker.Say($"{PrettyNumber} {PrettyName} [red]用户取消[/]");
         }
         else if (hasErr || !task.Result)
         {
-            Talker.Say($"{PrettyNumber}{PrettyName} [red]失败[/] [grey](未知错误)[/]");
+            Talker.Say($"{PrettyNumber} {PrettyName} [red]失败[/] [grey](未知错误)[/]");
         }
         else
         {
-            Talker.Say($"{PrettyNumber}{PrettyName} [green]完成[/]");
+            Talker.Say($"{PrettyNumber} {PrettyName} [green]完成[/]");
         }
 
         Finished?.Invoke(this, EventArgs.Empty);
