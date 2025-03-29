@@ -140,9 +140,6 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             }
         }
 
-        XEnv.ShowPresetsReport();
-        XEnv.ShowSourcesReport();
-
         MissionManager manager = new();
         manager.AddMissions(XEnv.Instance.Presets, XEnv.Instance.Sources);
 

@@ -18,25 +18,29 @@ internal sealed class MissionManager
 
     public MissionManager AddMissions(Preset preset, IEnumerable<string> sources)
     {
+        AnsiConsole.Markup("预设 [orange1][[{0}]][/] [grey]{1}[/] [blue]({2})[/]",
+            preset.Name,
+            $"{preset.Inputs.Count} -> {preset.Outputs.Count}",
+            preset.Description
+            );
+
         var maker = new MissionMaker(preset);
 
+        Talker.Whisper("Begin to expand sources for the preset.");
+
         SourceExpander expander = new(preset);
-        Talker.Whisper("为预设 {0} 扩展源文件列表……", preset.Name);
         int count = 0;
         foreach (var source in expander.Expand(sources))
         {
             var mission = maker.Make(source);
-            Talker.Whisper(
-                "新任务 {0} : {1} INPUTS => {2} OUTPUTS",
-                mission.Name,
-                mission.Inputs.Count,
-                mission.Outputs.Count
-                );
-
+            Talker.Whisper("New Mission: [cyan]{0}[/]", Path.GetFileName(source));
             Missions.Add(mission);
             count++;
         }
-        Talker.Say("为预设 [blue]{0}[/] 生成 [yellow]{1}[/] 个任务。", preset.Name, count);
+
+        AnsiConsole.Markup("\tMissions: [yellow]{0}[/]", count);
+        AnsiConsole.Write(Text.NewLine);
+
         return this;
     }
 
@@ -74,6 +78,7 @@ internal sealed class MissionManager
         progress.Start(ctx =>
         {
             Talker.Whisper("开始计算任务总时长……");
+
             double totalSeconds = 0;
             DateTime startTime = DateTime.Now;
 

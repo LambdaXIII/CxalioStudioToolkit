@@ -47,31 +47,31 @@ internal sealed class XEnv
         AnsiConsole.Write("\n\n");
     }
 
-    public static void ShowPresetsReport()
-    {
-        if (Instance.Presets.Count == 0)
+    /*    public static void ShowPresetsReport()
         {
-            AnsiConsole.MarkupLine("[red]未指定合法的预设文件。[/]");
-            return;
+            if (Instance.Presets.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]未指定合法的预设文件。[/]");
+                return;
+            }
+
+            AnsiConsole.MarkupLine("发现 [yellow]{0}[/] 个预设文件:", Instance.Presets.Count);
+
+            foreach (var preset in Instance.Presets)
+            {
+                AnsiConsole.MarkupLine("\t[yellow]{0}[/] <[cyan]{1}[/]>", preset.Name, preset.Description);
+            }
         }
 
-        AnsiConsole.MarkupLine("发现 [yellow]{0}[/] 个预设文件:", Instance.Presets.Count);
-
-        foreach (var preset in Instance.Presets)
+        public static void ShowSourcesReport()
         {
-            AnsiConsole.MarkupLine("\t[yellow]{0}[/] <[cyan]{1}[/]>", preset.Name, preset.Description);
-        }
-    }
-
-    public static void ShowSourcesReport()
-    {
-        if (Instance.Sources.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[red]未发现合法的来源路径。[/]");
-            return;
-        }
-        AnsiConsole.MarkupLine("发现 [yellow]{0}[/] 个来源路径。", Instance.Sources.Count);
-    }
+            if (Instance.Sources.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[red]未发现合法的来源路径。[/]");
+                return;
+            }
+            AnsiConsole.MarkupLine("发现 [yellow]{0}[/] 个来源路径。", Instance.Sources.Count);
+        }*/
 
     public void HandleCancelation(object? _, ConsoleCancelEventArgs e)
     {
