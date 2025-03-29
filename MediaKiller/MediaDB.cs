@@ -1,5 +1,6 @@
 ﻿using CxStudio.Core;
 using CxStudio.FFmpegHelper;
+using MediaKiller.Properties;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -238,6 +239,7 @@ internal class MediaDB
     {
         DataMutex.WaitOne();
         Database.Clear();
+        Talker.Say(Resources.MediaInfoCachesCleared);
         DataMutex.ReleaseMutex();
     }
 

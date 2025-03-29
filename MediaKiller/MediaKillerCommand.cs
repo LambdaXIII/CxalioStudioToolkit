@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using MediaKiller.Properties;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -52,27 +53,30 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
 
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
+        //Thread.CurrentThread.CurrentUICulture = new System.Globalization.CultureInfo("zh-CN");
+
         XEnv.ShowBanner();
 
         int exitCode = 0;
         XEnv.Instance.Debug = settings.Debug;
-        Talker.ReInstall();
-        Talker.Whisper("Debug mode enabled.");
+        if (settings.Debug)
+        {
+            Talker.Say(Resources.DebugModeEnabled);
+            Talker.ReInstall();
+        }
+
 
         XEnv.Instance.OutputFolder = settings.Output ?? Environment.CurrentDirectory;
         XEnv.Instance.ScriptOutput = settings.ScriptOutput;
 
         XEnv.Instance.ForceOverwrite = settings.ForceOverwrite;
-        if (XEnv.Instance.ForceOverwrite) Talker.Say("已启用[red]强制覆写[/]模式，将忽略预设文件中的相关设置。");
+        if (XEnv.Instance.ForceOverwrite) Talker.Say(Resources.ForceOverwriteEnabled);
 
         XEnv.Instance.NoOverwrite = settings.NoOverwrite;
-        if (XEnv.Instance.NoOverwrite) Talker.Say("已启用[green]禁止覆写[/]模式，将忽略任何相关设置并拒绝覆盖目标文件。");
+        if (XEnv.Instance.NoOverwrite) Talker.Say(Resources.NoOverwriteEnabled);
 
         if (settings.ClearCaches)
-        {
-            Talker.Say("将重新生成所有媒体信息");
             MediaDB.Instance.ClearCaches();
-        }
 
         try
         {
@@ -80,15 +84,15 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
         }
         catch (OperationCanceledException)
         {
-            Talker.Say("[red]任务被强制取消[/]");
+            Talker.Say(Resources.ErrMissionsForcelyCancelled);
         }
         catch (Exception ex)
         {
 
             AnsiConsole.Write(Text.NewLine);
-            AnsiConsole.Write(new Rule("[red]错误报告[/]").LeftJustified());
+            AnsiConsole.Write(new Rule($"[red]{Resources.ErrorReportTitle}[/]").LeftJustified());
             AnsiConsole.WriteException(ex);
-            AnsiConsole.Write(new Rule("[red]END[/]").RightJustified());
+            AnsiConsole.Write(new Rule($"[red]{Resources.ErrorReportEnd}[/]").RightJustified());
             AnsiConsole.Write(Text.NewLine);
             exitCode = 1;
         }
@@ -98,14 +102,14 @@ internal sealed class MediaKillerCommand : Command<MediaKillerCommand.Settings>
             XEnv.Instance.ReportResults();
             XEnv.Instance.CleanUpEverything();
             if (XEnv.Instance.GlobalCancellation.IsCancellationRequested)
-                Talker.Say("[grey]任务[red]并未未全部完成[/]，下次使用[yellow]同样的参数[/]并[yellow]添加 -n 选项[/]，即可[green]跳过已完成的任务[/]。[/]");
+                Talker.Say(Resources.NoteForNextTime);
         }
         return exitCode;
     } // Execute
 
     private int MainProcess(ref Settings settings)
     {
-        Talker.Whisper("MediaKiller started.  :)");
+        Talker.Whisper(Resources.MainProcessStarted);
 
         if (settings.GenerateProfile)
         {
