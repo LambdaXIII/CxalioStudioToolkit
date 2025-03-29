@@ -79,27 +79,29 @@ internal sealed class MissionManager
         {
             Talker.Whisper("开始计算任务总时长……");
 
+            var totalTask = ctx.AddTask("初始化").IsIndeterminate(true);
             double totalSeconds = 0;
             DateTime startTime = DateTime.Now;
 
-            var durationProgressTask = ctx.AddTask("[green]统计时长[/]").MaxValue(missionCount).IsIndeterminate(true);
+            var durationTask =
+            ctx.AddTaskBefore(
+                string.Format("[blue]{0}[/]", "正在统计源文件时长"),
+                totalTask)
+            .MaxValue(Missions.Count);
 
             foreach (var m in Missions)
             {
                 totalSeconds += m.Duration.TotalSeconds;
-                durationProgressTask.Increment(1);
+                durationTask.Increment(1);
                 if (XEnv.Instance.GlobalForceCancellation.IsCancellationRequested) return;
             }
 
-            durationProgressTask.StopTask();
-
-
+            durationTask.StopTask();
             Talker.Whisper("共有 {0} 个任务，原始文件时长总计 {1} 秒。", missionCount, totalSeconds);
 
             double completedTime = 0;
 
-            var totalTask = ctx.AddTask("总体进度").MaxValue(totalSeconds);
-            totalTask.StartTask();
+            totalTask.Description("总体进度").MaxValue(totalSeconds).IsIndeterminate(false);
 
 
             for (int i = 0; i < missionCount; i++)
